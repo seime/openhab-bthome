@@ -10,11 +10,12 @@ Following thing type is supported by this extension:
 
 | Thing Type ID | Description             |
 |---------------|-------------------------|
-| device        | BTHome compliant device |
+| bthome        | BTHome compliant device |
 
 ## Discovery
 
-As any other Bluetooth device, devices are discovered automatically by the corresponding bridge.
+Discovery does not work as openHAB discovery mechanism doesn't provide the necessary service data (no manufacturerId
+set)
 
 ## Thing Configuration
 
@@ -33,8 +34,8 @@ Channels are created dynamically based on the device's capabilities.
 bthome.things with Bluetooth adapter config included
 
 ```
-Bridge bluetooth:bluez:hci1 "My BLE dongle" [ address="00:00:00:00:00:00", backgroundDiscovery=false] {
-    bthome-device my-device "BTHome broadcasting device" [ address="00:00:00:00:00:00"]
+Bridge bluetooth:bluez:hci1 "My BLE dongle" [ address="00:00:00:00:00:00", backgroundDiscovery=true] {
+    bthome my-device "BTHome broadcasting device" [ address="00:00:00:00:00:00"]
 }
 ```
 
