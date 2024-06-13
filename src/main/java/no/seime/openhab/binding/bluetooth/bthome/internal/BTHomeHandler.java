@@ -12,8 +12,19 @@
  */
 package no.seime.openhab.binding.bluetooth.bthome.internal;
 
-import io.kaitai.struct.ByteBufferKaitaiStream;
-import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeServiceData;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.measure.Unit;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.bluetooth.BeaconBluetoothHandler;
@@ -33,17 +44,8 @@ import org.openhab.core.types.util.UnitUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.measure.Unit;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import io.kaitai.struct.ByteBufferKaitaiStream;
+import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeServiceData;
 
 /**
  * The {@link BTHomeHandler} is responsible for handling commands, which are

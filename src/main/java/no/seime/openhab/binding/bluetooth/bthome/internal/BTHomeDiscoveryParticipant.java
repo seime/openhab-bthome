@@ -12,6 +12,8 @@
  */
 package no.seime.openhab.binding.bluetooth.bthome.internal;
 
+import java.util.*;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.bluetooth.BluetoothBindingConstants;
@@ -22,8 +24,6 @@ import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.ThingUID;
-
-import java.util.*;
 
 /**
  * This discovery participant is able to recognize ruuvitag devices and create discovery results for them.

@@ -1,11 +1,12 @@
 package no.seime.openhab.binding.bluetooth.bthome.internal;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+
 import io.kaitai.struct.ByteBufferKaitaiStream;
 import io.kaitai.struct.KaitaiStream;
 import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeServiceData;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ParserTest {
 
