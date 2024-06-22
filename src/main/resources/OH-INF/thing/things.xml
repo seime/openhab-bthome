@@ -25,7 +25,8 @@
 			</parameter>
 			<parameter name="expectedReportingIntervalSeconds" type="integer" required="false">
 				<label>Expected number of seconds between device broadcasting</label>
-				<description>Use the device configured reporting interval. A 10% grace period is added. If the device still hasn't phoned home, it will be marked as offline</description>
+				<description>Use the device configured reporting interval. A 10% grace period is added. If the device still hasn't
+					phoned home, it will be marked as offline</description>
 				<default>3600</default>
 			</parameter>
 
