@@ -6,24 +6,27 @@ This extension adds support for [BTHome protocal standard devices](https://bthom
 
 Following thing type is supported by this extension:
 
-* Any BTHome device that supports the BTHome protocol standard
+* Any BTHome device that supports the BTHome V2 protocol standard
 
-| Thing Type ID | Description             |
-|---------------|-------------------------|
-| bthome        | BTHome compliant device |
+| Thing Type ID | Description                |
+|---------------|----------------------------|
+| bthome        | BTHome V2 compliant device |
 
 ## Discovery
 
-Discovery does not work as openHAB discovery mechanism doesn't provide the necessary service data (no manufacturerId
-set)
+Discovery does not work as openHAB discovery mechanism doesn't provide the necessary service data (no manufacturerId is
+used by BTHome, only a custom service UUID). You need to know the Bluetooth address of the device to add it to openHAB.
+
+Please upvote https://github.com/openhab/openhab-addons/issues/16910 to get this supported.
 
 ## Thing Configuration
 
 Supported configuration parameters for the things:
 
-| Property | Type   | Default | Required | Description                                                     |
-|----------|--------|---------|----------|-----------------------------------------------------------------|
-| address  | String |         | Yes      | Bluetooth address of the device (in format "XX:XX:XX:XX:XX:XX") |
+| Property                         | Type    | Default | Required | Description                                                                                                                                                                                                      |
+|----------------------------------|---------|---------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| address                          | String  |         | Yes      | Bluetooth address of the device (in format "XX:XX:XX:XX:XX:XX")                                                                                                                                                  |
+| expectedReportingIntervalSeconds | integer | 3600    | No       | Expected reporting interval in seconds. If the device hasn't phoned home within this deadline, channels are marked as `UNDEF` and device will become `OFFLINE`. Note: A 10% grace period is added to this value. |
 
 ## Channels
 
@@ -31,15 +34,11 @@ Channels are created dynamically based on the device's capabilities.
 
 ## Example
 
-bthome.things with Bluetooth adapter config included
+`bthome.things` with Bluetooth adapter config included (in this example, an ESP32 running ESPHome firmware acting as a
+Bluetooth proxy):
 
 ```
-Bridge bluetooth:bluez:hci1 "My BLE dongle" [ address="00:00:00:00:00:00", backgroundDiscovery=true] {
-    bthome my-device "BTHome broadcasting device" [ address="00:00:00:00:00:00"]
+Bridge bluetooth:esphome:proxy "My ESP Bluetooth proxy" [ address="00:00:00:00:00:00", backgroundDiscovery=true] {
+    bthome my-device "BTHome broadcasting device" [ address="00:00:00:00:00:00", expectedReportingIntervalSeconds = 600]
 }
-```
-
-bthome.items:
-
-```
 ```
