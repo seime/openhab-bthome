@@ -45,7 +45,7 @@ Channels are created dynamically based on the device's capabilities.
 Bluetooth proxy):
 
 ```
-Bridge bluetooth:esphome:proxy "My ESP Bluetooth proxy" [ address="00:00:00:00:00:00", backgroundDiscovery=true] {
+Bridge bluetooth:esphome:proxy "My ESP Bluetooth proxy" [ backgroundDiscovery=true ] {
     bthome my-device "BTHome broadcasting device" [ address="00:00:00:00:00:00", expectedReportingIntervalSeconds = 600]
 }
 ```
