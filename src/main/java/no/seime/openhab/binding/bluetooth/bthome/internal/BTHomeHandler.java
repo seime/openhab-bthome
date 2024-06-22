@@ -56,8 +56,6 @@ import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeSe
 @NonNullByDefault
 public class BTHomeHandler extends BeaconBluetoothHandler {
 
-    // Ruuvitag sends an update every 10 seconds. So we keep a heartbeat to give it some slack
-    private static final int HEARTBEAT_TIMEOUT_MINUTES = 70;
     private final Logger logger = LoggerFactory.getLogger(BTHomeHandler.class);
     private final AtomicBoolean receivedStatus = new AtomicBoolean();
     private final BTHomeChannelTypeProvider dynamicChannelTypeProvider;
@@ -69,13 +67,18 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         this.dynamicChannelTypeProvider = dynamicChannelTypeProvider;
     }
 
+    private long heartbeatDelay = 3600;
+
     @Override
     public void initialize() {
         super.initialize();
-        if (getThing().getStatus() != ThingStatus.OFFLINE) {
-            heartbeatFuture = scheduler.scheduleWithFixedDelay(this::heartbeat, 0, HEARTBEAT_TIMEOUT_MINUTES,
-                    TimeUnit.MINUTES);
-        }
+
+        updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Waiting for device to wake up.");
+
+        BTHomeConfiguration config = getConfigAs(BTHomeConfiguration.class);
+        heartbeatDelay = (long) (config.expectedReportingIntervalSeconds * 1.1);
+        heartbeatFuture = scheduler.scheduleWithFixedDelay(this::heartbeat, heartbeatDelay, heartbeatDelay,
+                TimeUnit.SECONDS);
     }
 
     private void heartbeat() {
@@ -130,7 +133,6 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 bthomeData = updatedBthomeData;
                 processDataPacket();
             }
-
         }
     }
 
@@ -139,6 +141,8 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
             try {
                 BthomeServiceData deviceData = new BthomeServiceData(new ByteBufferKaitaiStream(bthomeData));
                 ArrayList<BthomeServiceData.BthomeMeasurement> measurements = deviceData.measurement();
+
+                updateStatus(ThingStatus.ONLINE);
 
                 List<Channel> currentChannels = getThing().getChannels();
                 List<Channel> allChannels = new ArrayList<>(currentChannels);
@@ -158,6 +162,10 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 }
             } catch (Exception e) {
                 logger.error("Error processing BTHome data", e);
+                getThing().getChannels().stream().map(Channel::getUID).filter(this::isLinked)
+                        .forEach(c -> updateState(c, UnDefType.UNDEF));
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                        "Error processing BTHome data. Only latest version (V2) is supported: " + e.getMessage());
             }
 
         } else {
@@ -296,6 +304,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 updateState(channel.getUID(), state);
                 break;
             }
+            // TODO implement these
             // case BINARY_BATTERY: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
             // .data();
             // State state = toNumericState(channel, m.unit(), m.())
@@ -636,14 +645,17 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
     }
 
     private Channel getOrCreateChannel(List<Channel> currentChannels, BTHomeTypeMapping typeMapping) {
-        ChannelUID channelUID = new ChannelUID(getThing().getUID(), typeMapping.getChannelName());
+        String channelName = typeMapping.getChannelName();
+        ChannelUID channelUID = new ChannelUID(getThing().getUID(), channelName);
         Channel existingChannel = currentChannels.stream().filter(c -> c.getUID().equals(channelUID)).findFirst()
                 .orElse(null);
         if (existingChannel == null) {
-            ChannelType newChannelType = createChannelType(typeMapping.getChannelName(), typeMapping.getChannelName(),
-                    typeMapping.getItemType(), null, null);
+            ChannelType newChannelType = createChannelType(channelName, channelName, typeMapping.getItemType(),
+                    Set.of("Property"), typeMapping.getCategory());
 
-            Channel newChannel = ChannelBuilder.create(channelUID).withLabel(typeMapping.getChannelName())
+            String channelLabel = channelName.substring(0, 1).toUpperCase() + channelName.substring(1);
+
+            Channel newChannel = ChannelBuilder.create(channelUID).withLabel(channelLabel)
                     .withKind(typeMapping.getChannelKind()).withType(newChannelType.getUID())
                     .withAcceptedItemType(typeMapping.getItemType()).build();
 

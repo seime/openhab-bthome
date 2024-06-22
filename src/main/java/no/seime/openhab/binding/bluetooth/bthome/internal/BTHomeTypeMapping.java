@@ -11,24 +11,26 @@ public enum BTHomeTypeMapping {
     // Add mappings from https://bthome.io/format/
 
     ACCELERATION(BthomeServiceData.BthomeObjectId.SENSOR_ACCELERATION, "acceleration", ChannelKind.STATE,
-            "Number:Acceleration"),
+            "Number:Acceleration", "motion"),
     BATTERY_PERCENTAGE(BthomeServiceData.BthomeObjectId.SENSOR_BATTERY, "battery", ChannelKind.STATE,
-            "Number:Dimensionless"),
-    CO2(BthomeServiceData.BthomeObjectId.SENSOR_CO2, "co2", ChannelKind.STATE, "Number:Concentration"),
-    HUMIDITY(BthomeServiceData.BthomeObjectId.SENSOR_HUMIDITY, "humidity", ChannelKind.STATE, "Number:Dimensionless"),
+            "Number:Dimensionless", "batterylevel"),
+    CO2(BthomeServiceData.BthomeObjectId.SENSOR_CO2, "co2", ChannelKind.STATE, "Number:Concentration", "carbondioxide"),
+    HUMIDITY(BthomeServiceData.BthomeObjectId.SENSOR_HUMIDITY, "humidity", ChannelKind.STATE, "Number:Dimensionless",
+            "humidity"),
     ILLUMINANCE(BthomeServiceData.BthomeObjectId.SENSOR_ILLUMINANCE_0_01, "light", ChannelKind.STATE,
-            "Number:Illuminance"),
-    MOISTURE(BthomeServiceData.BthomeObjectId.SENSOR_MOISTURE, "moisture", ChannelKind.STATE, "Number:Dimensionless"),
+            "Number:Illuminance", "light"),
+    MOISTURE(BthomeServiceData.BthomeObjectId.SENSOR_MOISTURE, "moisture", ChannelKind.STATE, "Number:Dimensionless",
+            "humidity"),
     MOISTURE_WITH_DECIMAL(BthomeServiceData.BthomeObjectId.SENSOR_MOISTURE_0_01, "moisture", ChannelKind.STATE,
-            "Number:Dimensionless"),
+            "Number:Dimensionless", "humidity"),
     VOLTAGE(BthomeServiceData.BthomeObjectId.SENSOR_VOLTAGE_0_1, "voltage", ChannelKind.STATE,
-            "Number:ElectricPotential"),
+            "Number:ElectricPotential", "energy"),
     VOLTAGE_DECIMAL(BthomeServiceData.BthomeObjectId.SENSOR_VOLTAGE_0_001, "voltage", ChannelKind.STATE,
-            "Number:ElectricPotential"),
+            "Number:ElectricPotential", "energy"),
     TEMPERATURE(BthomeServiceData.BthomeObjectId.SENSOR_TEMPERATURE_0_1, "temperature", ChannelKind.STATE,
-            "Number:Temperature"),
+            "Number:Temperature", "temperature"),
     TEMPERATURE_DECIMAL(BthomeServiceData.BthomeObjectId.SENSOR_TEMPERATURE_0_01, "temperature", ChannelKind.STATE,
-            "Number:Temperature");
+            "Number:Temperature", "temperature");
 
     // TODO add more mappings
 
@@ -36,14 +38,16 @@ public enum BTHomeTypeMapping {
     private final String channelName;
     private final ChannelKind channelKind;
     private final String itemType;
+    private final String category;
 
     BTHomeTypeMapping(BthomeServiceData.BthomeObjectId bthomeObjectId, String channelName, ChannelKind channelKind,
-            String itemType) {
+            String itemType, String category) {
 
         this.bthomeObjectId = bthomeObjectId;
         this.channelName = channelName;
         this.channelKind = channelKind;
         this.itemType = itemType;
+        this.category = category;
     }
 
     @Nullable
@@ -54,6 +58,10 @@ public enum BTHomeTypeMapping {
             }
         }
         return null;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public String getChannelName() {
