@@ -1,6 +1,9 @@
-# Secuyou Smart Lock
+# BTHome Bluetooth Binding for openHAB
 
-This extension adds support for [BTHome protocal standard devices](https://bthome.io/)
+<img src="logo.png" width="400"/>
+<img src="openHAB_workswith.png" width="400"/>
+
+This binding adds support for [BTHome protocal standard devices](https://bthome.io/)
 
 ## Supported Things
 
@@ -11,6 +14,10 @@ Following thing type is supported by this extension:
 | Thing Type ID | Description                |
 |---------------|----------------------------|
 | bthome        | BTHome V2 compliant device |
+
+> **NOTE**: This binding only supports a **few** datatypes pr 22.06.2024. If you need support for more datatypes, please
+> provide a PR or open an issue. It has so far only been tested with
+> a [b-Parasite plant sensor](https://github.com/rbaron/b-parasite)
 
 ## Discovery
 
@@ -23,10 +30,10 @@ Please upvote https://github.com/openhab/openhab-addons/issues/16910 to get this
 
 Supported configuration parameters for the things:
 
-| Property                         | Type    | Default | Required | Description                                                                                                                                                                                                      |
-|----------------------------------|---------|---------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| address                          | String  |         | Yes      | Bluetooth address of the device (in format "XX:XX:XX:XX:XX:XX")                                                                                                                                                  |
-| expectedReportingIntervalSeconds | integer | 3600    | No       | Expected reporting interval in seconds. If the device hasn't phoned home within this deadline, channels are marked as `UNDEF` and device will become `OFFLINE`. Note: A 10% grace period is added to this value. |
+| Property                           | Type    | Default | Required | Description                                                                                                                                                                                                      |
+|------------------------------------|---------|---------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `address`                          | String  |         | Yes      | Bluetooth address of the device (in format `XX:XX:XX:XX:XX:XX`)                                                                                                                                                  |
+| `expectedReportingIntervalSeconds` | integer | 3600    | No       | Expected reporting interval in seconds. If the device hasn't phoned home within this deadline, channels are marked as `UNDEF` and device will become `OFFLINE`. Note: A 10% grace period is added to this value. |
 
 ## Channels
 
