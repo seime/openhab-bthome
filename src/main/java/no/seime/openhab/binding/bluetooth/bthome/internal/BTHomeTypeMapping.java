@@ -10,6 +10,7 @@ import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeSe
 public enum BTHomeTypeMapping {
     // Add mappings from https://bthome.io/format/
 
+    PACKET_ID(BthomeServiceData.BthomeObjectId.MISC_PACKET_ID, "packet-id", ChannelKind.STATE, "Number", "text"),
     ACCELERATION(BthomeServiceData.BthomeObjectId.SENSOR_ACCELERATION, "acceleration", ChannelKind.STATE,
             "Number:Acceleration", "motion"),
     BATTERY_PERCENTAGE(BthomeServiceData.BthomeObjectId.SENSOR_BATTERY, "battery", ChannelKind.STATE,
@@ -30,7 +31,8 @@ public enum BTHomeTypeMapping {
     TEMPERATURE(BthomeServiceData.BthomeObjectId.SENSOR_TEMPERATURE_0_1, "temperature", ChannelKind.STATE,
             "Number:Temperature", "temperature"),
     TEMPERATURE_DECIMAL(BthomeServiceData.BthomeObjectId.SENSOR_TEMPERATURE_0_01, "temperature", ChannelKind.STATE,
-            "Number:Temperature", "temperature");
+            "Number:Temperature", "temperature"),
+    EVENT_BUTTON(BthomeServiceData.BthomeObjectId.EVENT_BUTTON, "button", ChannelKind.TRIGGER, "String", "motion");
 
     // TODO add more mappings
 
