@@ -12,8 +12,16 @@
  */
 package no.seime.openhab.binding.bluetooth.bthome.internal;
 
-import io.kaitai.struct.ByteBufferKaitaiStream;
-import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeServiceData;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.measure.Unit;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.bluetooth.BeaconBluetoothHandler;
@@ -30,14 +38,8 @@ import org.openhab.core.types.util.UnitUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.measure.Unit;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.*;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import io.kaitai.struct.ByteBufferKaitaiStream;
+import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeServiceData;
 
 /**
  * The {@link BTHomeHandler} is responsible for handling commands, which are
@@ -136,12 +138,6 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 BthomeServiceData deviceData = new BthomeServiceData(new ByteBufferKaitaiStream(bthomeData));
                 ArrayList<BthomeServiceData.BthomeMeasurement> measurements = deviceData.measurement();
 
-                updateStatus(ThingStatus.ONLINE);
-
-                List<Channel> currentChannels = getThing().getChannels();
-                List<Channel> allChannels = new ArrayList<>(currentChannels);
-                allChannels.addAll(createMissingChannels(currentChannels, measurements));
-
                 // Check if we have a new packetId
                 Optional<BthomeServiceData.BthomeMeasurement> packetField = measurements.stream()
                         .filter(e -> e.data() instanceof BthomeServiceData.BthomeMiscPacketId).findFirst();
@@ -153,6 +149,12 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                     }
                     lastPacketId = newPacketId;
                 }
+
+                updateStatus(ThingStatus.ONLINE);
+
+                List<Channel> currentChannels = getThing().getChannels();
+                List<Channel> allChannels = new ArrayList<>(currentChannels);
+                allChannels.addAll(createMissingChannels(currentChannels, measurements));
 
                 for (BthomeServiceData.BthomeMeasurement measurement : measurements) {
                     BthomeServiceData.BthomeObjectId bthomeObjectId = measurement.objectId();
