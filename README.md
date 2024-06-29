@@ -15,9 +15,14 @@ Following thing type is supported by this extension:
 |---------------|----------------------------|
 | bthome        | BTHome V2 compliant device |
 
-> **NOTE**: This binding only supports a **few** datatypes pr 25.06.2024. If you need support for more datatypes, please
-> provide a PR or open an issue. It has so far only been tested with
-> a [b-Parasite plant sensor](https://github.com/rbaron/b-parasite) and a Shelly BLU button
+ALL field types **except** the following are supported:
+
+- text sensor
+- raw sensor
+- device type id
+- device firmware version
+
+Encryption is not yet supported.
 
 ## Discovery
 

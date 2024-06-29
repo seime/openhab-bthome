@@ -116,6 +116,7 @@ types:
             'bthome_object_id::sensor_gas_uint32': bthome_sensor_gas_uint32
             'bthome_object_id::sensor_energy_0_001_uint32': bthome_sensor_energy_0_001_uint32
             'bthome_object_id::sensor_volume_0_001': bthome_sensor_volume_0_001
+            'bthome_object_id::sensor_volume_storage_0_001': bthome_sensor_volume_storage_0_001
             'bthome_object_id::sensor_water': bthome_sensor_water
             'bthome_object_id::sensor_timestamp': bthome_sensor_timestamp
             'bthome_object_id::sensor_acceleration': bthome_sensor_acceleration
@@ -566,6 +567,15 @@ types:
         value: value * 0.001
       unit:
         value: '"L"'
+  bthome_sensor_volume_storage_0_001:
+    seq:
+      - id: value
+        type: u4
+    instances:
+      volume:
+        value: value * 0.001
+      unit:
+        value: '"L"'
   bthome_sensor_water:
     seq:
       - id: value
@@ -676,6 +686,7 @@ enums:
     0x50: sensor_timestamp
     0x51: sensor_acceleration
     0x52: sensor_gyroscope
+    0x55: sensor_volume_storage_0_001
   button_event_type:
     0x00: none
     0x01: press

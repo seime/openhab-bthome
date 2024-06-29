@@ -189,423 +189,440 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
     private void updateChannelValue(BthomeServiceData.BthomeMeasurement measurement,
             BthomeServiceData.BthomeObjectId bthomeObjectId, Channel channel) {
+
+        State state = null;
         switch (bthomeObjectId) {
+
             case MISC_PACKET_ID: {
                 BthomeServiceData.BthomeMiscPacketId m = (BthomeServiceData.BthomeMiscPacketId) measurement.data();
-                State state = new DecimalType(m.packetId());
-                updateState(channel.getUID(), state);
+                state = toNumericState(channel, null, m.packetId());
+                break;
+            }
+            case SENSOR_ACCELERATION: {
+                BthomeServiceData.BthomeSensorAcceleration m = (BthomeServiceData.BthomeSensorAcceleration) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.acceleration());
                 break;
             }
 
             case SENSOR_BATTERY: {
                 BthomeServiceData.BthomeSensorBattery m = (BthomeServiceData.BthomeSensorBattery) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.battery());
-                updateState(channel.getUID(), state);
+                state = toNumericState(channel, m.unit(), m.battery());
                 break;
             }
-            case SENSOR_TEMPERATURE_0_01: {
-                BthomeServiceData.BthomeSensorTemperature001 m = (BthomeServiceData.BthomeSensorTemperature001) measurement
+            case SENSOR_CO2: {
+                BthomeServiceData.BthomeSensorCo2 m = (BthomeServiceData.BthomeSensorCo2) measurement.data();
+                state = toNumericState(channel, m.unit(), m.co2());
+                break;
+            }
+
+            case SENSOR_COUNT: {
+                BthomeServiceData.BthomeSensorCount m = (BthomeServiceData.BthomeSensorCount) measurement.data();
+                state = toNumericState(channel, null, m.count());
+                break;
+            }
+            case SENSOR_COUNT_UINT16: {
+                BthomeServiceData.BthomeSensorCountUint16 m = (BthomeServiceData.BthomeSensorCountUint16) measurement
                         .data();
-                State state = toNumericState(channel, m.unit(), m.temperature());
-                updateState(channel.getUID(), state);
+                state = toNumericState(channel, null, m.count());
+                break;
+            }
+            case SENSOR_COUNT_UINT32: {
+                BthomeServiceData.BthomeSensorCountUint32 m = (BthomeServiceData.BthomeSensorCountUint32) measurement
+                        .data();
+                state = toNumericState(channel, null, m.count());
+                break;
+            }
+
+            case SENSOR_CURRENT_0_001: {
+                BthomeServiceData.BthomeSensorCurrent0001 m = (BthomeServiceData.BthomeSensorCurrent0001) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.current());
+                break;
+            }
+
+            case SENSOR_DEWPOINT_0_01: {
+                BthomeServiceData.BthomeSensorDewpoint001 m = (BthomeServiceData.BthomeSensorDewpoint001) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.dewPoint());
+                break;
+            }
+
+            case SENSOR_DISTANCE_MM: {
+                BthomeServiceData.BthomeSensorDistanceMm m = (BthomeServiceData.BthomeSensorDistanceMm) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.distance());
+                break;
+            }
+            case SENSOR_DISTANCE_M_0_1: {
+                BthomeServiceData.BthomeSensorDistanceM01 m = (BthomeServiceData.BthomeSensorDistanceM01) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.distance());
+                break;
+            }
+
+            case SENSOR_DURATION_0_001: {
+                BthomeServiceData.BthomeSensorDuration0001 m = (BthomeServiceData.BthomeSensorDuration0001) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.duration());
+                break;
+            }
+
+            case SENSOR_ENERGY_0_001: {
+                BthomeServiceData.BthomeSensorEnergy0001 m = (BthomeServiceData.BthomeSensorEnergy0001) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.energy());
+                break;
+            }
+
+            case SENSOR_ENERGY_0_001_UINT32: {
+                BthomeServiceData.BthomeSensorEnergy0001Uint32 m = (BthomeServiceData.BthomeSensorEnergy0001Uint32) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.energy());
+                break;
+            }
+
+            case SENSOR_GAS: {
+                BthomeServiceData.BthomeSensorGas m = (BthomeServiceData.BthomeSensorGas) measurement.data();
+                state = toNumericState(channel, m.unit(), m.gas());
+                break;
+            }
+            case SENSOR_GAS_UINT32: {
+                BthomeServiceData.BthomeSensorGasUint32 m = (BthomeServiceData.BthomeSensorGasUint32) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.gas());
+                break;
+            }
+
+            case SENSOR_GYROSCOPE: {
+                BthomeServiceData.BthomeSensorGyroscope m = (BthomeServiceData.BthomeSensorGyroscope) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.gyroscope());
+                break;
+            }
+
+            case SENSOR_HUMIDITY: {
+                BthomeServiceData.BthomeSensorHumidity m = (BthomeServiceData.BthomeSensorHumidity) measurement.data();
+                state = toNumericState(channel, m.unit(), m.humidity());
                 break;
             }
             case SENSOR_HUMIDITY_0_01: {
                 BthomeServiceData.BthomeSensorHumidity m = (BthomeServiceData.BthomeSensorHumidity) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.humidity());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_PRESSURE_0_01: {
-                BthomeServiceData.BthomeSensorPressure001 m = (BthomeServiceData.BthomeSensorPressure001) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.pressure());
-                updateState(channel.getUID(), state);
+                state = toNumericState(channel, m.unit(), m.humidity());
                 break;
             }
             case SENSOR_ILLUMINANCE_0_01: {
                 BthomeServiceData.BthomeSensorIlluminance001 m = (BthomeServiceData.BthomeSensorIlluminance001) measurement
                         .data();
-                State state = toNumericState(channel, m.unit(), m.illuminance());
-                updateState(channel.getUID(), state);
+                state = toNumericState(channel, m.unit(), m.illuminance());
                 break;
             }
+
             case SENSOR_MASS_KG_0_01: {
                 BthomeServiceData.BthomeSensorMassKg001 m = (BthomeServiceData.BthomeSensorMassKg001) measurement
                         .data();
-                State state = toNumericState(channel, m.unit(), m.mass());
-                updateState(channel.getUID(), state);
+                state = toNumericState(channel, m.unit(), m.mass());
                 break;
             }
             case SENSOR_MASS_LB_0_01: {
                 BthomeServiceData.BthomeSensorMassLb001 m = (BthomeServiceData.BthomeSensorMassLb001) measurement
                         .data();
-                State state = toNumericState(channel, m.unit(), m.mass());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_DEWPOINT_0_01: {
-                BthomeServiceData.BthomeSensorDewpoint001 m = (BthomeServiceData.BthomeSensorDewpoint001) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.dewPoint());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_COUNT: {
-                BthomeServiceData.BthomeSensorCount m = (BthomeServiceData.BthomeSensorCount) measurement.data();
-                State state = toNumericState(channel, null, m.count());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_ENERGY_0_001: {
-                BthomeServiceData.BthomeSensorEnergy0001 m = (BthomeServiceData.BthomeSensorEnergy0001) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.energy());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_POWER_0_01: {
-                BthomeServiceData.BthomeSensorPower001 m = (BthomeServiceData.BthomeSensorPower001) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.power());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_VOLTAGE_0_001: {
-                BthomeServiceData.BthomeSensorVoltage0001 m = (BthomeServiceData.BthomeSensorVoltage0001) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.voltage());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_PM2_5: {
-                BthomeServiceData.BthomeSensorPm25 m = (BthomeServiceData.BthomeSensorPm25) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.pm25());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_PM10: {
-                BthomeServiceData.BthomeSensorPm10 m = (BthomeServiceData.BthomeSensorPm10) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.pm10());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case BINARY_GENERIC_BOOLEAN: {
-                BthomeServiceData.BthomeBinaryGenericBoolean m = (BthomeServiceData.BthomeBinaryGenericBoolean) measurement
-                        .data();
-                State state = toSwitchState(m.genericBoolean());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            // case BINARY_POWER: { BthomeServiceData.BthomeBinaryPower m =
-            // (BthomeServiceData.BthomeBinaryPower) measurement
-            // .data();
-            // State state = toSwitchState(m.power());
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_OPENING: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            case SENSOR_CO2: {
-                BthomeServiceData.BthomeSensorCo2 m = (BthomeServiceData.BthomeSensorCo2) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.co2());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_TVOC: {
-                BthomeServiceData.BthomeSensorTvoc m = (BthomeServiceData.BthomeSensorTvoc) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.tvoc());
-                updateState(channel.getUID(), state);
+                state = toNumericState(channel, m.unit(), m.mass());
                 break;
             }
             case SENSOR_MOISTURE_0_01: {
                 BthomeServiceData.BthomeSensorMoisture001 m = (BthomeServiceData.BthomeSensorMoisture001) measurement
                         .data();
-                State state = toNumericState(channel, m.unit(), m.moisture());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            // TODO implement these
-            // case BINARY_BATTERY: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_BATTERY_CHARGING: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome)
-            // measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_CARBON_MONOXIDE: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome)
-            // measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_COLD: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_CONNECTIVITY: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome)
-            // measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_DOOR: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_GARAGE_DOOR: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome)
-            // measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_GAS: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_HEAT: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_LIGHT: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_LOCK: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_MOISTURE: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            case BINARY_MOTION: {
-                BthomeServiceData.BthomeBinaryMotion m = (BthomeServiceData.BthomeBinaryMotion) measurement.data();
-                State state = toSwitchState(m.motion());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            // case BINARY_MOVING: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_OCCUPANCY: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_PLUG: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_PRESENCE: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_PROBLEM: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_RUNNING: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_SAFETY: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_SMOKE: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_SOUND: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_TAMPER: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            // case BINARY_VIBRATION: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            case BINARY_WINDOW: {
-                BthomeServiceData.BthomeBinaryWindow m = (BthomeServiceData.BthomeBinaryWindow) measurement.data();
-                State state = toOpenClosedState(m.window());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_HUMIDITY: {
-                BthomeServiceData.BthomeSensorHumidity m = (BthomeServiceData.BthomeSensorHumidity) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.humidity());
-                updateState(channel.getUID(), state);
+                state = toNumericState(channel, m.unit(), m.moisture());
                 break;
             }
             case SENSOR_MOISTURE: {
                 BthomeServiceData.BthomeSensorMoisture m = (BthomeServiceData.BthomeSensorMoisture) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.moisture());
-                updateState(channel.getUID(), state);
+                state = toNumericState(channel, m.unit(), m.moisture());
                 break;
             }
+
+            case SENSOR_PM2_5: {
+                BthomeServiceData.BthomeSensorPm25 m = (BthomeServiceData.BthomeSensorPm25) measurement.data();
+                state = toNumericState(channel, m.unit(), m.pm25());
+                break;
+            }
+            case SENSOR_PM10: {
+                BthomeServiceData.BthomeSensorPm10 m = (BthomeServiceData.BthomeSensorPm10) measurement.data();
+                state = toNumericState(channel, m.unit(), m.pm10());
+                break;
+            }
+
+            case SENSOR_POWER_0_01: {
+                BthomeServiceData.BthomeSensorPower001 m = (BthomeServiceData.BthomeSensorPower001) measurement.data();
+                state = toNumericState(channel, m.unit(), m.power());
+                break;
+            }
+            case SENSOR_PRESSURE_0_01: {
+                BthomeServiceData.BthomeSensorPressure001 m = (BthomeServiceData.BthomeSensorPressure001) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.pressure());
+                break;
+            }
+
+            case SENSOR_ROTATION_0_1: {
+                BthomeServiceData.BthomeSensorRotation01 m = (BthomeServiceData.BthomeSensorRotation01) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.rotation());
+                break;
+            }
+
+            case SENSOR_SPEED_0_01: {
+                BthomeServiceData.BthomeSensorSpeed001 m = (BthomeServiceData.BthomeSensorSpeed001) measurement.data();
+                state = toNumericState(channel, m.unit(), m.speed());
+                break;
+            }
+
+            case SENSOR_TEMPERATURE_0_01: {
+                BthomeServiceData.BthomeSensorTemperature001 m = (BthomeServiceData.BthomeSensorTemperature001) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.temperature());
+                break;
+            }
+
+            case SENSOR_TEMPERATURE_0_1: {
+                BthomeServiceData.BthomeSensorTemperature01 m = (BthomeServiceData.BthomeSensorTemperature01) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.temperature());
+                break;
+            }
+
+            case SENSOR_TIMESTAMP: {
+                BthomeServiceData.BthomeSensorTimestamp m = (BthomeServiceData.BthomeSensorTimestamp) measurement
+                        .data();
+                state = new DateTimeType(
+                        ZonedDateTime.ofInstant(Instant.ofEpochSecond(m.value()), ZoneId.systemDefault()));
+                break;
+            }
+
+            case SENSOR_TVOC: {
+                BthomeServiceData.BthomeSensorTvoc m = (BthomeServiceData.BthomeSensorTvoc) measurement.data();
+                state = toNumericState(channel, m.unit(), m.tvoc());
+                break;
+            }
+
+            case SENSOR_VOLTAGE_0_001: {
+                BthomeServiceData.BthomeSensorVoltage0001 m = (BthomeServiceData.BthomeSensorVoltage0001) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.voltage());
+                break;
+            }
+
+            case SENSOR_VOLTAGE_0_1: {
+                BthomeServiceData.BthomeSensorVoltage01 m = (BthomeServiceData.BthomeSensorVoltage01) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.voltage());
+                break;
+            }
+            case SENSOR_VOLUME: {
+                BthomeServiceData.BthomeSensorVolume m = (BthomeServiceData.BthomeSensorVolume) measurement.data();
+                state = toNumericState(channel, m.unit(), m.volume());
+                break;
+            }
+            case SENSOR_VOLUME_0_1: {
+                BthomeServiceData.BthomeSensorVolume01 m = (BthomeServiceData.BthomeSensorVolume01) measurement.data();
+                state = toNumericState(channel, m.unit(), m.volume());
+                break;
+            }
+            case SENSOR_VOLUME_0_001: {
+                BthomeServiceData.BthomeSensorVolume0001 m = (BthomeServiceData.BthomeSensorVolume0001) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.volume());
+                break;
+            }
+            case SENSOR_VOLUME_FLOW_RATE_0_001: {
+                BthomeServiceData.BthomeSensorVolumeFlowRate0001 m = (BthomeServiceData.BthomeSensorVolumeFlowRate0001) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.volumeFlowRate());
+                break;
+            }
+            case SENSOR_UV_INDEX_0_1: {
+                BthomeServiceData.BthomeSensorUvIndex01 m = (BthomeServiceData.BthomeSensorUvIndex01) measurement
+                        .data();
+                state = toNumericState(channel, null, m.uvIndex());
+                break;
+            }
+            case SENSOR_WATER: {
+                BthomeServiceData.BthomeSensorWater m = (BthomeServiceData.BthomeSensorWater) measurement.data();
+                state = toNumericState(channel, m.unit(), m.water());
+                break;
+            }
+
+            // BINARY
+
+            case BINARY_BATTERY: {
+                BthomeServiceData.BthomeBinaryBattery m = (BthomeServiceData.BthomeBinaryBattery) measurement.data();
+                state = toSwitchState(m.battery());
+                break;
+            }
+            case BINARY_BATTERY_CHARGING: {
+                BthomeServiceData.BthomeBinaryBatteryCharging m = (BthomeServiceData.BthomeBinaryBatteryCharging) measurement
+                        .data();
+                state = toSwitchState(m.batteryCharging());
+                break;
+            }
+            case BINARY_CARBON_MONOXIDE: {
+                BthomeServiceData.BthomeBinaryCarbonMonoxide m = (BthomeServiceData.BthomeBinaryCarbonMonoxide) measurement
+                        .data();
+                state = toSwitchState(m.carbonMonoxide());
+                break;
+            }
+            case BINARY_COLD: {
+                BthomeServiceData.BthomeBinaryCold m = (BthomeServiceData.BthomeBinaryCold) measurement.data();
+                state = toSwitchState(m.cold());
+                break;
+            }
+            case BINARY_CONNECTIVITY: {
+                BthomeServiceData.BthomeBinaryConnectivity m = (BthomeServiceData.BthomeBinaryConnectivity) measurement
+                        .data();
+                state = toSwitchState(m.connectivity());
+                break;
+            }
+            case BINARY_DOOR: {
+                BthomeServiceData.BthomeBinaryDoor m = (BthomeServiceData.BthomeBinaryDoor) measurement.data();
+                state = toContactState(m.door());
+                break;
+            }
+            case BINARY_GARAGE_DOOR: {
+                BthomeServiceData.BthomeBinaryGarageDoor m = (BthomeServiceData.BthomeBinaryGarageDoor) measurement
+                        .data();
+                state = toContactState(m.garageDoor());
+                break;
+            }
+            case BINARY_GAS: {
+                BthomeServiceData.BthomeBinaryGas m = (BthomeServiceData.BthomeBinaryGas) measurement.data();
+                state = toSwitchState(m.gas());
+                break;
+            }
+            case BINARY_GENERIC_BOOLEAN: {
+                BthomeServiceData.BthomeBinaryGenericBoolean m = (BthomeServiceData.BthomeBinaryGenericBoolean) measurement
+                        .data();
+                state = toSwitchState(m.genericBoolean());
+                break;
+            }
+            case BINARY_HEAT: {
+                BthomeServiceData.BthomeBinaryHeat m = (BthomeServiceData.BthomeBinaryHeat) measurement.data();
+                state = toSwitchState(m.heat());
+                break;
+            }
+            case BINARY_LIGHT: {
+                BthomeServiceData.BthomeBinaryLight m = (BthomeServiceData.BthomeBinaryLight) measurement.data();
+                state = toSwitchState(m.light());
+                break;
+            }
+            case BINARY_LOCK: {
+                BthomeServiceData.BthomeBinaryLock m = (BthomeServiceData.BthomeBinaryLock) measurement.data();
+                state = toSwitchState(m.lock());
+                break;
+            }
+            case BINARY_MOISTURE: {
+                BthomeServiceData.BthomeBinaryMoisture m = (BthomeServiceData.BthomeBinaryMoisture) measurement.data();
+                state = toSwitchState(m.moisture());
+                break;
+            }
+            case BINARY_MOTION: {
+                BthomeServiceData.BthomeBinaryMotion m = (BthomeServiceData.BthomeBinaryMotion) measurement.data();
+                state = toSwitchState(m.motion());
+                break;
+            }
+            case BINARY_MOVING: {
+                BthomeServiceData.BthomeBinaryMoving m = (BthomeServiceData.BthomeBinaryMoving) measurement.data();
+                state = toSwitchState(m.moving());
+                break;
+            }
+            case BINARY_OCCUPANCY: {
+                BthomeServiceData.BthomeBinaryOccupancy m = (BthomeServiceData.BthomeBinaryOccupancy) measurement
+                        .data();
+                state = toSwitchState(m.occupancy());
+                break;
+            }
+            case BINARY_OPENING: {
+                BthomeServiceData.BthomeBinaryOpening m = (BthomeServiceData.BthomeBinaryOpening) measurement.data();
+                state = toContactState(m.opening());
+                break;
+            }
+            case BINARY_PLUG: {
+                BthomeServiceData.BthomeBinaryPlug m = (BthomeServiceData.BthomeBinaryPlug) measurement.data();
+                state = toSwitchState(m.plug());
+                break;
+            }
+            case BINARY_POWER: {
+                BthomeServiceData.BthomeBinaryPower m = (BthomeServiceData.BthomeBinaryPower) measurement.data();
+                state = toSwitchState(m.power());
+                break;
+            }
+            case BINARY_PRESENCE: {
+                BthomeServiceData.BthomeBinaryPresence m = (BthomeServiceData.BthomeBinaryPresence) measurement.data();
+                state = toSwitchState(m.presence());
+                break;
+            }
+            case BINARY_PROBLEM: {
+                BthomeServiceData.BthomeBinaryProblem m = (BthomeServiceData.BthomeBinaryProblem) measurement.data();
+                state = toSwitchState(m.problem());
+                break;
+            }
+            case BINARY_RUNNING: {
+                BthomeServiceData.BthomeBinaryRunning m = (BthomeServiceData.BthomeBinaryRunning) measurement.data();
+                state = toSwitchState(m.running());
+                break;
+            }
+            case BINARY_SAFETY: {
+                BthomeServiceData.BthomeBinarySafety m = (BthomeServiceData.BthomeBinarySafety) measurement.data();
+                state = toSwitchState(m.safety());
+                break;
+            }
+            case BINARY_SMOKE: {
+                BthomeServiceData.BthomeBinarySmoke m = (BthomeServiceData.BthomeBinarySmoke) measurement.data();
+                state = toSwitchState(m.smoke());
+                break;
+            }
+            case BINARY_SOUND: {
+                BthomeServiceData.BthomeBinarySound m = (BthomeServiceData.BthomeBinarySound) measurement.data();
+                state = toSwitchState(m.sound());
+                break;
+            }
+            case BINARY_TAMPER: {
+                BthomeServiceData.BthomeBinaryTamper m = (BthomeServiceData.BthomeBinaryTamper) measurement.data();
+                state = toSwitchState(m.tamper());
+                break;
+            }
+            case BINARY_VIBRATION: {
+                BthomeServiceData.BthomeBinaryVibration m = (BthomeServiceData.BthomeBinaryVibration) measurement
+                        .data();
+                state = toSwitchState(m.vibration());
+                break;
+            }
+            case BINARY_WINDOW: {
+                BthomeServiceData.BthomeBinaryWindow m = (BthomeServiceData.BthomeBinaryWindow) measurement.data();
+                state = toContactState(m.window());
+                break;
+            }
+
+            // TODO RAW
+            // TODO TEXT
+
             case EVENT_BUTTON: {
                 BthomeServiceData.BthomeEventButton m = (BthomeServiceData.BthomeEventButton) measurement.data();
                 BthomeServiceData.ButtonEventType event = m.event();
                 triggerChannel(channel.getUID(), event.toString());
                 break;
             }
-            // case EVENT_DIMMER: { BthomeServiceData.Bthome m = (BthomeServiceData.Bthome) measurement
-            // .data();
-            // State state = toNumericState(channel, m.unit(), m.())
-            // updateState(channel.getUID(), state);break;}
-            case SENSOR_COUNT_UINT16: {
-                BthomeServiceData.BthomeSensorCountUint16 m = (BthomeServiceData.BthomeSensorCountUint16) measurement
-                        .data();
-                State state = toNumericState(channel, null, m.count());
-                updateState(channel.getUID(), state);
+            case EVENT_DIMMER: {
+                BthomeServiceData.BthomeEventDimmer m = (BthomeServiceData.BthomeEventDimmer) measurement.data();
+                BthomeServiceData.DimmerEventType event = m.event();
+                // Will trigger values NONE, ROTATE_LEFT_X, ROTATE_RIGHT_X where X is the number of steps
+                triggerChannel(channel.getUID(),
+                        event.toString() + (m.steps() != null && m.steps() > 0 ? "_" + m.steps().toString() : ""));
                 break;
             }
-            case SENSOR_COUNT_UINT32: {
-                BthomeServiceData.BthomeSensorCountUint32 m = (BthomeServiceData.BthomeSensorCountUint32) measurement
-                        .data();
-                State state = toNumericState(channel, null, m.count());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_ROTATION_0_1: {
-                BthomeServiceData.BthomeSensorRotation01 m = (BthomeServiceData.BthomeSensorRotation01) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.rotation());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_DISTANCE_MM: {
-                BthomeServiceData.BthomeSensorDistanceMm m = (BthomeServiceData.BthomeSensorDistanceMm) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.distance());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_DISTANCE_M_0_1: {
-                BthomeServiceData.BthomeSensorDistanceM01 m = (BthomeServiceData.BthomeSensorDistanceM01) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.distance());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_DURATION_0_001: {
-                BthomeServiceData.BthomeSensorDuration0001 m = (BthomeServiceData.BthomeSensorDuration0001) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.duration());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_CURRENT_0_001: {
-                BthomeServiceData.BthomeSensorCurrent0001 m = (BthomeServiceData.BthomeSensorCurrent0001) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.current());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_SPEED_0_01: {
-                BthomeServiceData.BthomeSensorSpeed001 m = (BthomeServiceData.BthomeSensorSpeed001) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.speed());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_TEMPERATURE_0_1: {
-                BthomeServiceData.BthomeSensorTemperature01 m = (BthomeServiceData.BthomeSensorTemperature01) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.temperature());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_UV_INDEX_0_1: {
-                BthomeServiceData.BthomeSensorUvIndex01 m = (BthomeServiceData.BthomeSensorUvIndex01) measurement
-                        .data();
-                State state = toNumericState(channel, null, m.uvIndex());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_VOLUME_0_1: {
-                BthomeServiceData.BthomeSensorVolume01 m = (BthomeServiceData.BthomeSensorVolume01) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.volume());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_VOLUME: {
-                BthomeServiceData.BthomeSensorVolume m = (BthomeServiceData.BthomeSensorVolume) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.volume());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_VOLUME_FLOW_RATE_0_001: {
-                BthomeServiceData.BthomeSensorVolumeFlowRate0001 m = (BthomeServiceData.BthomeSensorVolumeFlowRate0001) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.volumeFlowRate());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_VOLTAGE_0_1: {
-                BthomeServiceData.BthomeSensorVoltage01 m = (BthomeServiceData.BthomeSensorVoltage01) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.voltage());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_GAS: {
-                BthomeServiceData.BthomeSensorGas m = (BthomeServiceData.BthomeSensorGas) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.gas());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_GAS_UINT32: {
-                BthomeServiceData.BthomeSensorGasUint32 m = (BthomeServiceData.BthomeSensorGasUint32) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.gas());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_ENERGY_0_001_UINT32: {
-                BthomeServiceData.BthomeSensorEnergy0001Uint32 m = (BthomeServiceData.BthomeSensorEnergy0001Uint32) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.energy());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_VOLUME_0_001: {
-                BthomeServiceData.BthomeSensorVolume0001 m = (BthomeServiceData.BthomeSensorVolume0001) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.volume());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_WATER: {
-                BthomeServiceData.BthomeSensorWater m = (BthomeServiceData.BthomeSensorWater) measurement.data();
-                State state = toNumericState(channel, m.unit(), m.water());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_TIMESTAMP: {
-                BthomeServiceData.BthomeSensorTimestamp m = (BthomeServiceData.BthomeSensorTimestamp) measurement
-                        .data();
-                State state = new DateTimeType(
-                        ZonedDateTime.ofInstant(Instant.ofEpochSecond(m.value()), ZoneId.systemDefault()));
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_ACCELERATION: {
-                BthomeServiceData.BthomeSensorAcceleration m = (BthomeServiceData.BthomeSensorAcceleration) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.acceleration());
-                updateState(channel.getUID(), state);
-                break;
-            }
-            case SENSOR_GYROSCOPE: {
-                BthomeServiceData.BthomeSensorGyroscope m = (BthomeServiceData.BthomeSensorGyroscope) measurement
-                        .data();
-                State state = toNumericState(channel, m.unit(), m.gyroscope());
-                updateState(channel.getUID(), state);
-                break;
-            }
-
+        }
+        if (state != null) {
+            updateState(channel.getUID(), state);
         }
     }
 
@@ -660,7 +677,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         return value.value() ? OnOffType.ON : OnOffType.OFF;
     }
 
-    private State toOpenClosedState(BthomeServiceData.Bool8 value) {
+    private State toContactState(BthomeServiceData.Bool8 value) {
         return value.value() ? OpenClosedType.OPEN : OpenClosedType.CLOSED;
     }
 
