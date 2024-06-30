@@ -140,7 +140,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 boolean isEncrypted = deviceData.deviceInformation().encryption();
                 if (isEncrypted) {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                            "Encryption is not yet supported.");
+                            "Device sent encrypted data, but encryption is not yet supported in the binding.");
                     return;
                 }
 
