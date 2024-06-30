@@ -139,14 +139,15 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 BthomeServiceData deviceData = new BthomeServiceData(new ByteBufferKaitaiStream(bthomeData));
                 boolean isEncrypted = deviceData.deviceInformation().encryption();
                 if (isEncrypted) {
-                    logger.warn("[] Encrypted data received. Encryption is not yet supported.", getThing().getUID());
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                            "Encryption is not yet supported.");
                     return;
                 }
 
-                ArrayList<BthomeServiceData.BthomeMeasurement> measurements = deviceData.measurement();
+                ArrayList<BthomeServiceData.BthomeMeasurement> allDataFields = deviceData.measurement();
 
                 // Check if we have a new packetId
-                Optional<BthomeServiceData.BthomeMeasurement> packetField = measurements.stream()
+                Optional<BthomeServiceData.BthomeMeasurement> packetField = allDataFields.stream()
                         .filter(e -> e.data() instanceof BthomeServiceData.BthomeMiscPacketId).findFirst();
                 if (packetField.isPresent()) {
                     int newPacketId = ((BthomeServiceData.BthomeMiscPacketId) packetField.get().data()).packetId();
@@ -159,27 +160,27 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
                 updateStatus(ThingStatus.ONLINE);
 
-                Map<BthomeServiceData.BthomeObjectId, List<BthomeServiceData.BthomeMeasurement>> measurementsPerType = measurements
+                // Thing properties
+                List<BthomeServiceData.BthomeMeasurement> deviceProperties = allDataFields.stream()
+                        .filter(prop -> prop.objectId().id() >= 0xF0).collect(Collectors.toList());
+                if (!deviceProperties.isEmpty()) {
+                    Map<String, String> updatedProperties = parseDeviceProperties(deviceProperties);
+                    updateThing(editThing().withProperties(updatedProperties).build());
+                }
+
+                // Measurements
+                List<BthomeServiceData.BthomeMeasurement> deviceMeasurements = allDataFields.stream()
+                        .filter(prop -> prop.objectId().id() < 0xF0).collect(Collectors.toList());
+
+                Map<BthomeServiceData.BthomeObjectId, List<BthomeServiceData.BthomeMeasurement>> allGroupedMeasurements = deviceMeasurements
                         .stream().collect(groupingBy(e -> e.objectId()));
 
                 List<Channel> currentChannels = getThing().getChannels();
                 List<Channel> allChannels = new ArrayList<>(currentChannels);
-                allChannels.addAll(createMissingChannels(currentChannels, measurementsPerType));
+                allChannels.addAll(createMissingChannels(currentChannels, allGroupedMeasurements));
 
-                // Device type + firmware version -> thing properties
-                Set<BthomeServiceData.BthomeObjectId> deviceProperties = measurementsPerType.keySet().stream()
-                        .filter(prop -> prop.id() >= 0xF0).collect(Collectors.toSet());
-                if (!deviceProperties.isEmpty()) {
-                    Map<String, String> updatedProperties = parseDeviceProperties(deviceProperties,
-                            measurementsPerType);
-                    editThing().withProperties(updatedProperties).build();
-                }
-                for (BthomeServiceData.BthomeObjectId objectId : measurementsPerType.keySet()) {
-                    if (objectId.id() >= 0xF0) {
-                        // Handled as property
-                        continue;
-                    }
-                    List<BthomeServiceData.BthomeMeasurement> measurementsOfType = measurementsPerType.get(objectId);
+                for (BthomeServiceData.BthomeObjectId objectId : allGroupedMeasurements.keySet()) {
+                    List<BthomeServiceData.BthomeMeasurement> measurementsOfType = allGroupedMeasurements.get(objectId);
 
                     int counter = 0;
                     for (BthomeServiceData.BthomeMeasurement measurement : measurementsOfType) {
@@ -207,25 +208,23 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         }
     }
 
-    private static Map<String, String> parseDeviceProperties(Set<BthomeServiceData.BthomeObjectId> deviceProperties,
-            Map<BthomeServiceData.BthomeObjectId, List<BthomeServiceData.BthomeMeasurement>> measurementsPerType) {
+    private Map<String, String> parseDeviceProperties(List<BthomeServiceData.BthomeMeasurement> deviceProperties) {
         Map<String, String> updatedProperties = new HashMap<>();
-        for (BthomeServiceData.BthomeObjectId objectId : deviceProperties) {
-            switch (objectId) {
+        for (BthomeServiceData.BthomeMeasurement prop : deviceProperties) {
+            switch (prop.objectId()) {
                 case DEVICE_TYPE -> {
-                    BthomeServiceData.BthomeDeviceType deviceType = (BthomeServiceData.BthomeDeviceType) measurementsPerType
-                            .get(objectId).get(0).data();
+                    BthomeServiceData.BthomeDeviceType deviceType = (BthomeServiceData.BthomeDeviceType) prop.data();
                     updatedProperties.put("deviceType", String.valueOf(deviceType.deviceTypeId()));
                 }
                 case DEVICE_FW_VERSION_UINT24 -> {
-                    BthomeServiceData.BthomeDeviceFwVersionUint24 firmwareVersion = (BthomeServiceData.BthomeDeviceFwVersionUint24) measurementsPerType
-                            .get(objectId).get(0).data();
+                    BthomeServiceData.BthomeDeviceFwVersionUint24 firmwareVersion = (BthomeServiceData.BthomeDeviceFwVersionUint24) prop
+                            .data();
                     updatedProperties.put("firmwareVersion", String.format("%d.%d.%d", firmwareVersion.fwVersionMajor(),
                             firmwareVersion.fwVersionMinor(), firmwareVersion.fwVersionPatch()));
                 }
                 case DEVICE_FW_VERSION_UINT32 -> {
-                    BthomeServiceData.BthomeDeviceFwVersionUint32 firmwareVersion = (BthomeServiceData.BthomeDeviceFwVersionUint32) measurementsPerType
-                            .get(objectId).get(0).data();
+                    BthomeServiceData.BthomeDeviceFwVersionUint32 firmwareVersion = (BthomeServiceData.BthomeDeviceFwVersionUint32) prop
+                            .data();
                     updatedProperties.put("firmwareVersion",
                             String.format("%d.%d.%d.%d", firmwareVersion.fwVersionMajor(),
                                     firmwareVersion.fwVersionMinor(), firmwareVersion.fwVersionPatch(),

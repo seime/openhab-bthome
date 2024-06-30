@@ -77,7 +77,7 @@ class BTHomeHandlerTest {
     void testParseDuplicateNonDuplicateField() {
         deviceHandler.initialize();
         deviceHandler.processDataPacket(TestUtils.byteStringToByteArray(
-                "64, 2, -54, 9, 46, 40, 5, 0, 0, 0, 12, -10, 12, 47, 0, 1, 100,33,1,45,0,63,2,12"));
+                "64, 2, -54, 9, 46, 40, 5, 0, 0, 0, 12, -10, 12, 47, 0, 1, 100,33,1,45,0,63,2,12,-16,2,0"));
         assertEquals(9, deviceHandler.getThing().getChannels().size());
         verifyChannelCreated("battery");
         verifyChannelCreated("illuminance");
@@ -98,6 +98,8 @@ class BTHomeHandlerTest {
         verifyStateUpdated("motion", OnOffType.ON);
         verifyStateUpdated("window", OpenClosedType.CLOSED);
         verifyStateUpdated("rotation", new QuantityType<>(307.40000000000003, Units.DEGREE_ANGLE));
+
+        assertEquals("2", deviceHandler.getThing().getProperties().get("deviceType"));
     }
 
     private void verifyStateUpdated(String channelName, State state) {
