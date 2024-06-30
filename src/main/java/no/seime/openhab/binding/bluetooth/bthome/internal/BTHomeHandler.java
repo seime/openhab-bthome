@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import javax.measure.Unit;
 
@@ -89,6 +90,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
     @Override
     public void dispose() {
+        logger.info("[] Disposing BTHomeHandler", getThing().getUID());
         try {
             super.dispose();
         } finally {
@@ -124,7 +126,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
             // Cache the data for the refresh command
             if (updatedBthomeData != null) {
-                logger.debug("Received updated BTHome data");
+                logger.debug("[] Received updated BTHome data", getThing().getUID());
                 cachedBthomeData = updatedBthomeData;
                 processDataPacket(cachedBthomeData);
             }
@@ -135,6 +137,12 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         if (bthomeData.length != 0) {
             try {
                 BthomeServiceData deviceData = new BthomeServiceData(new ByteBufferKaitaiStream(bthomeData));
+                boolean isEncrypted = deviceData.deviceInformation().encryption();
+                if (isEncrypted) {
+                    logger.warn("[] Encrypted data received. Encryption is not yet supported.", getThing().getUID());
+                    return;
+                }
+
                 ArrayList<BthomeServiceData.BthomeMeasurement> measurements = deviceData.measurement();
 
                 // Check if we have a new packetId
@@ -158,7 +166,19 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 List<Channel> allChannels = new ArrayList<>(currentChannels);
                 allChannels.addAll(createMissingChannels(currentChannels, measurementsPerType));
 
+                // Device type + firmware version -> thing properties
+                Set<BthomeServiceData.BthomeObjectId> deviceProperties = measurementsPerType.keySet().stream()
+                        .filter(prop -> prop.id() >= 0xF0).collect(Collectors.toSet());
+                if (!deviceProperties.isEmpty()) {
+                    Map<String, String> updatedProperties = parseDeviceProperties(deviceProperties,
+                            measurementsPerType);
+                    editThing().withProperties(updatedProperties).build();
+                }
                 for (BthomeServiceData.BthomeObjectId objectId : measurementsPerType.keySet()) {
+                    if (objectId.id() >= 0xF0) {
+                        // Handled as property
+                        continue;
+                    }
                     List<BthomeServiceData.BthomeMeasurement> measurementsOfType = measurementsPerType.get(objectId);
 
                     int counter = 0;
@@ -185,6 +205,35 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
             // Received Bluetooth scan with no service data
             // This happens -- we ignore this silently.
         }
+    }
+
+    private static Map<String, String> parseDeviceProperties(Set<BthomeServiceData.BthomeObjectId> deviceProperties,
+            Map<BthomeServiceData.BthomeObjectId, List<BthomeServiceData.BthomeMeasurement>> measurementsPerType) {
+        Map<String, String> updatedProperties = new HashMap<>();
+        for (BthomeServiceData.BthomeObjectId objectId : deviceProperties) {
+            switch (objectId) {
+                case DEVICE_TYPE -> {
+                    BthomeServiceData.BthomeDeviceType deviceType = (BthomeServiceData.BthomeDeviceType) measurementsPerType
+                            .get(objectId).get(0).data();
+                    updatedProperties.put("deviceType", String.valueOf(deviceType.deviceTypeId()));
+                }
+                case DEVICE_FW_VERSION_UINT24 -> {
+                    BthomeServiceData.BthomeDeviceFwVersionUint24 firmwareVersion = (BthomeServiceData.BthomeDeviceFwVersionUint24) measurementsPerType
+                            .get(objectId).get(0).data();
+                    updatedProperties.put("firmwareVersion", String.format("%d.%d.%d", firmwareVersion.fwVersionMajor(),
+                            firmwareVersion.fwVersionMinor(), firmwareVersion.fwVersionPatch()));
+                }
+                case DEVICE_FW_VERSION_UINT32 -> {
+                    BthomeServiceData.BthomeDeviceFwVersionUint32 firmwareVersion = (BthomeServiceData.BthomeDeviceFwVersionUint32) measurementsPerType
+                            .get(objectId).get(0).data();
+                    updatedProperties.put("firmwareVersion",
+                            String.format("%d.%d.%d.%d", firmwareVersion.fwVersionMajor(),
+                                    firmwareVersion.fwVersionMinor(), firmwareVersion.fwVersionPatch(),
+                                    firmwareVersion.fwVersionBuild()));
+                }
+            }
+        }
+        return updatedProperties;
     }
 
     private void updateChannelValue(BthomeServiceData.BthomeMeasurement measurement,
@@ -365,6 +414,12 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 break;
             }
 
+            case SENSOR_RAW: {
+                BthomeServiceData.BthomeSensorRaw m = (BthomeServiceData.BthomeSensorRaw) measurement.data();
+                state = new StringType(Base64.getEncoder().encodeToString(m.value()));
+                break;
+            }
+
             case SENSOR_ROTATION_0_1: {
                 BthomeServiceData.BthomeSensorRotation01 m = (BthomeServiceData.BthomeSensorRotation01) measurement
                         .data();
@@ -389,6 +444,12 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 BthomeServiceData.BthomeSensorTemperature01 m = (BthomeServiceData.BthomeSensorTemperature01) measurement
                         .data();
                 state = toNumericState(channel, m.unit(), m.temperature());
+                break;
+            }
+
+            case SENSOR_TEXT: {
+                BthomeServiceData.BthomeSensorText m = (BthomeServiceData.BthomeSensorText) measurement.data();
+                state = new StringType(m.value());
                 break;
             }
 
@@ -441,6 +502,13 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 state = toNumericState(channel, m.unit(), m.volumeFlowRate());
                 break;
             }
+            case SENSOR_VOLUME_STORAGE: {
+                BthomeServiceData.BthomeSensorVolumeStorage m = (BthomeServiceData.BthomeSensorVolumeStorage) measurement
+                        .data();
+                state = toNumericState(channel, m.unit(), m.volumeStorage());
+                break;
+            }
+
             case SENSOR_UV_INDEX_0_1: {
                 BthomeServiceData.BthomeSensorUvIndex01 m = (BthomeServiceData.BthomeSensorUvIndex01) measurement
                         .data();
@@ -603,9 +671,6 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 break;
             }
 
-            // TODO RAW
-            // TODO TEXT
-
             case EVENT_BUTTON: {
                 BthomeServiceData.BthomeEventButton m = (BthomeServiceData.BthomeEventButton) measurement.data();
                 BthomeServiceData.ButtonEventType event = m.event();
@@ -616,8 +681,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 BthomeServiceData.BthomeEventDimmer m = (BthomeServiceData.BthomeEventDimmer) measurement.data();
                 BthomeServiceData.DimmerEventType event = m.event();
                 // Will trigger values NONE, ROTATE_LEFT_X, ROTATE_RIGHT_X where X is the number of steps
-                triggerChannel(channel.getUID(),
-                        event.toString() + (m.steps() != null && m.steps() > 0 ? "_" + m.steps().toString() : ""));
+                triggerChannel(channel.getUID(), event.toString() + (m.steps() > 0 ? "_" + m.steps() : ""));
                 break;
             }
         }

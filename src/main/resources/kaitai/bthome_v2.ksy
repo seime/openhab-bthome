@@ -116,11 +116,16 @@ types:
             'bthome_object_id::sensor_gas_uint32': bthome_sensor_gas_uint32
             'bthome_object_id::sensor_energy_0_001_uint32': bthome_sensor_energy_0_001_uint32
             'bthome_object_id::sensor_volume_0_001': bthome_sensor_volume_0_001
-            'bthome_object_id::sensor_volume_storage_0_001': bthome_sensor_volume_storage_0_001
             'bthome_object_id::sensor_water': bthome_sensor_water
             'bthome_object_id::sensor_timestamp': bthome_sensor_timestamp
             'bthome_object_id::sensor_acceleration': bthome_sensor_acceleration
             'bthome_object_id::sensor_gyroscope': bthome_sensor_gyroscope
+            'bthome_object_id::sensor_text': bthome_sensor_text
+            'bthome_object_id::sensor_raw': bthome_sensor_raw
+            'bthome_object_id::sensor_volume_storage': bthome_sensor_volume_storage
+            'bthome_object_id::device_type': bthome_device_type
+            'bthome_object_id::device_fw_version_uint32': bthome_device_fw_version_uint32
+            'bthome_object_id::device_fw_version_uint24': bthome_device_fw_version_uint24
             _: bthome_unknown
   bool8:
     seq:
@@ -420,7 +425,6 @@ types:
         enum: dimmer_event_type
       - id: steps
         type: u1
-        if: event == dimmer_event_type::rotate_left or event == dimmer_event_type::rotate_right
   bthome_sensor_count_uint16:
     seq:
       - id: count
@@ -567,15 +571,6 @@ types:
         value: value * 0.001
       unit:
         value: '"L"'
-  bthome_sensor_volume_storage_0_001:
-    seq:
-      - id: value
-        type: u4
-    instances:
-      volume:
-        value: value * 0.001
-      unit:
-        value: '"L"'
   bthome_sensor_water:
     seq:
       - id: value
@@ -607,6 +602,51 @@ types:
         value: value * 0.001
       unit:
         value: '"\u00B0/s"'
+  bthome_sensor_text:
+    seq:
+      - id: len_value
+        type: u1
+      - id: value
+        type: str
+        size: len_value
+        encoding: UTF-8
+  bthome_sensor_raw:
+    seq:
+      - id: len_value
+        type: u1
+      - id: value
+        size: len_value
+  bthome_sensor_volume_storage:
+    seq:
+      - id: value
+        type: u4
+    instances:
+      volume_storage:
+        value: value * 0.001
+      unit:
+        value: '"L"'
+  bthome_device_type:
+    seq:
+      - id: device_type_id
+        type: u2
+  bthome_device_fw_version_uint32:
+    seq:
+      - id: fw_version_build
+        type: u1
+      - id: fw_version_patch
+        type: u1
+      - id: fw_version_minor
+        type: u1
+      - id: fw_version_major
+        type: u1
+  bthome_device_fw_version_uint24:
+    seq:
+      - id: fw_version_patch
+        type: u1
+      - id: fw_version_minor
+        type: u1
+      - id: fw_version_major
+        type: u1
   bthome_unknown:
     doc: Data with unknown object ID are parsed as a byte array until the end
     seq:
@@ -686,7 +726,12 @@ enums:
     0x50: sensor_timestamp
     0x51: sensor_acceleration
     0x52: sensor_gyroscope
-    0x55: sensor_volume_storage_0_001
+    0x53: sensor_text
+    0x54: sensor_raw
+    0x55: sensor_volume_storage
+    0xF0: device_type
+    0xF1: device_fw_version_uint32
+    0xF2: device_fw_version_uint24
   button_event_type:
     0x00: none
     0x01: press
@@ -695,6 +740,7 @@ enums:
     0x04: long_press
     0x05: long_double_press
     0x06: long_triple_press
+    0x80: hold_press
   dimmer_event_type:
     0x00: none
     0x01: rotate_left

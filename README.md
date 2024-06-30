@@ -5,6 +5,8 @@
 
 This binding adds support for [BTHome protocal standard devices](https://bthome.io/)
 
+This project is using https://github.com/koenvervloesem/BTHome-Kaitai-Struct to parse the BTHome protocol data.
+
 ## Supported Things
 
 Following thing type is supported by this extension:
@@ -15,14 +17,7 @@ Following thing type is supported by this extension:
 |---------------|----------------------------|
 | bthome        | BTHome V2 compliant device |
 
-ALL field types **except** the following are supported:
-
-- text sensor
-- raw sensor
-- device type id
-- device firmware version
-
-Encryption is not yet supported.
+Encryption is not yet supported, but let me know if you need it and I will add it.
 
 ## Discovery
 

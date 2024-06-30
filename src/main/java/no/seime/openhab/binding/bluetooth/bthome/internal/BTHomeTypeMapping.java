@@ -68,7 +68,7 @@ public enum BTHomeTypeMapping {
     PRESSURE(BthomeServiceData.BthomeObjectId.SENSOR_PRESSURE_0_01, "pressure", ChannelKind.STATE, "Number:Pressure",
             "pressure"),
 
-    // RAW(BthomeServiceData.BthomeObjectId.SENSOR_RAW, "raw", ChannelKind.STATE, "String", "text"),
+    RAW(BthomeServiceData.BthomeObjectId.SENSOR_RAW, "raw", ChannelKind.STATE, "String", "text"),
     ROTATION(BthomeServiceData.BthomeObjectId.SENSOR_ROTATION_0_1, "rotation", ChannelKind.STATE, "Number:Angle",
             "incline"),
 
@@ -78,7 +78,7 @@ public enum BTHomeTypeMapping {
             "Number:Temperature", "temperature"),
     TEMPERATURE_DECIMAL(BthomeServiceData.BthomeObjectId.SENSOR_TEMPERATURE_0_01, "temperature", ChannelKind.STATE,
             "Number:Temperature", "temperature"),
-    // TEXT(BthomeServiceData.BthomeObjectId.SENSOR_TEXT, "text", ChannelKind.STATE, "String", "text"),
+    TEXT(BthomeServiceData.BthomeObjectId.SENSOR_TEXT, "text", ChannelKind.STATE, "String", "text"),
 
     TIMESTAMP(BthomeServiceData.BthomeObjectId.SENSOR_TIMESTAMP, "timestamp", ChannelKind.STATE, "DateTime", "time"),
 
@@ -94,7 +94,7 @@ public enum BTHomeTypeMapping {
             "sewerage"),
     VOLUME_2(BthomeServiceData.BthomeObjectId.SENSOR_VOLUME_0_001, "volume", ChannelKind.STATE, "Number:Volume",
             "sewerage"),
-    VOLUME_STORAGE(BthomeServiceData.BthomeObjectId.SENSOR_VOLUME_STORAGE_0_001, "volume-storage", ChannelKind.STATE,
+    VOLUME_STORAGE(BthomeServiceData.BthomeObjectId.SENSOR_VOLUME_STORAGE, "volume-storage", ChannelKind.STATE,
             "Number:Volume", "sewerage"),
 
     VOLUME_FLOW_RATE(BthomeServiceData.BthomeObjectId.SENSOR_VOLUME_FLOW_RATE_0_001, "volume-flow-rate",
