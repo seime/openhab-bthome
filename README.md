@@ -1,7 +1,11 @@
 # BTHome Bluetooth Binding for openHAB
 
 <img src="logo.png" width="400"/>
-<img src="openHAB_workswith.png" width="400"/>
+
+[<img src="https://github.com/seime/support-me/blob/main/openHAB_workswith.png" width=300>](https://www.openhab.org)
+
+[<img src="https://github.com/seime/support-me/blob/main/beer_me.png" width=150>](https://buymeacoffee.com/arnes)
+
 
 This binding adds support for [BTHome protocal standard devices](https://bthome.io/)
 
