@@ -54,26 +54,29 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
     private final AtomicBoolean receivedStatus = new AtomicBoolean();
     private final BTHomeChannelTypeProvider dynamicChannelTypeProvider;
 
-    private @NonNullByDefault({}) ScheduledFuture<?> heartbeatFuture;
+    private @NonNullByDefault({}) ScheduledFuture<?> watchDogFuture;
 
     private int lastPacketId = -1;
+    private long heartbeatDelay = 3600;
+    private byte[] cachedBthomeData = new byte[0];
 
     public BTHomeHandler(Thing thing, BTHomeChannelTypeProvider dynamicChannelTypeProvider) {
         super(thing);
         this.dynamicChannelTypeProvider = dynamicChannelTypeProvider;
     }
 
-    private long heartbeatDelay = 3600;
-
     @Override
     public void initialize() {
         super.initialize();
 
-        updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Waiting for device to wake up.");
+        initInternal();
+    }
 
+    private void initInternal() {
+        updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Waiting for device to wake up.");
         BTHomeConfiguration config = getConfig().as(BTHomeConfiguration.class);
         heartbeatDelay = (long) (config.expectedReportingIntervalSeconds * 1.1);
-        heartbeatFuture = scheduler.scheduleWithFixedDelay(this::heartbeat, heartbeatDelay, heartbeatDelay,
+        watchDogFuture = scheduler.scheduleWithFixedDelay(this::heartbeat, heartbeatDelay, heartbeatDelay,
                 TimeUnit.SECONDS);
     }
 
@@ -89,15 +92,30 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
     }
 
     @Override
+    public void bridgeStatusChanged(ThingStatusInfo bridgeStatusInfo) {
+        super.bridgeStatusChanged(bridgeStatusInfo);
+        if (bridgeStatusInfo.getStatus() != ThingStatus.ONLINE) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
+            cachedBthomeData = new byte[0];
+            cancelWatchdog();
+            initInternal();
+        }
+    }
+
+    @Override
     public void dispose() {
         logger.info("[] Disposing BTHomeHandler", getThing().getUID());
         try {
             super.dispose();
         } finally {
-            if (heartbeatFuture != null) {
-                heartbeatFuture.cancel(true);
-                heartbeatFuture = null;
-            }
+            cancelWatchdog();
+        }
+    }
+
+    private void cancelWatchdog() {
+        if (watchDogFuture != null) {
+            watchDogFuture.cancel(true);
+            watchDogFuture = null;
         }
     }
 
@@ -105,8 +123,6 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
     protected List<Channel> createDynamicChannels() {
         return new ArrayList<>();
     }
-
-    private byte[] cachedBthomeData = new byte[0];
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
@@ -121,14 +137,18 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
             receivedStatus.set(true);
             super.onScanRecordReceived(scanNotification);
 
-            Map<String, byte[]> serviceData = scanNotification.getServiceData();
-            byte[] updatedBthomeData = serviceData.get(BTHomeBindingConstants.SERVICEDATA_UUID);
+            try {
+                Map<String, byte[]> serviceData = scanNotification.getServiceData();
+                byte[] updatedBthomeData = serviceData.get(BTHomeBindingConstants.SERVICEDATA_UUID);
 
-            // Cache the data for the refresh command
-            if (updatedBthomeData != null) {
-                logger.debug("[] Received updated BTHome data", getThing().getUID());
-                cachedBthomeData = updatedBthomeData;
-                processDataPacket(cachedBthomeData);
+                // Cache the data for the refresh command
+                if (updatedBthomeData != null) {
+                    logger.debug("[] Received updated BTHome data", getThing().getUID());
+                    cachedBthomeData = updatedBthomeData;
+                    processDataPacket(cachedBthomeData);
+                }
+            } catch (Exception e) {
+                logger.error("Error processing BTHome data", e);
             }
         }
     }
@@ -145,6 +165,11 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 }
 
                 ArrayList<BthomeServiceData.BthomeMeasurement> allDataFields = deviceData.measurement();
+                if (allDataFields.isEmpty()) {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                            "Device sent no measurements.");
+                    return;
+                }
 
                 // Check if we have a new packetId
                 Optional<BthomeServiceData.BthomeMeasurement> packetField = allDataFields.stream()
@@ -229,6 +254,9 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                             String.format("%d.%d.%d.%d", firmwareVersion.fwVersionMajor(),
                                     firmwareVersion.fwVersionMinor(), firmwareVersion.fwVersionPatch(),
                                     firmwareVersion.fwVersionBuild()));
+                }
+                default -> {
+                    logger.warn("Unknown device property: {}", prop.objectId());
                 }
             }
         }
