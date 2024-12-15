@@ -139,6 +139,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (isDisposed) {
             logger.warn("Handler is disposed, ignoring command {} to channel {}", command, channelUID);
+            return;
         }
         if (command instanceof RefreshType) {
             // Only accept refresh after 2 seconds since we will get this command for each channel
@@ -153,6 +154,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
     public void onScanRecordReceived(BluetoothScanNotification scanNotification) {
         if (isDisposed) {
             logger.debug("Handler is disposed, ignoring scannotificatiom");
+            return;
         }
 
         synchronized (receivedStatus) {
