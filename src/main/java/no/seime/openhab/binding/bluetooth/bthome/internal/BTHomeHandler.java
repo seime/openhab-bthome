@@ -59,6 +59,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
     private int lastPacketId = -1;
     private long heartbeatDelay = 3600;
     private byte[] cachedBthomeData = new byte[0];
+    private boolean isDisposed = false;
 
     public BTHomeHandler(Thing thing, BTHomeChannelTypeProvider dynamicChannelTypeProvider) {
         super(thing);
@@ -67,6 +68,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
     @Override
     public void initialize() {
+        logger.info("[{}] Initializing BTHomeHandler", getThing().getUID());
         super.initialize();
 
         initInternal();
@@ -74,6 +76,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
     private void initInternal() {
         updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Waiting for device to wake up.");
+        setChannelsToUndef();
         BTHomeConfiguration config = getConfig().as(BTHomeConfiguration.class);
         heartbeatDelay = (long) (config.expectedReportingIntervalSeconds * 1.1);
         watchDogFuture = scheduler.scheduleWithFixedDelay(this::heartbeat, heartbeatDelay, heartbeatDelay,
@@ -83,8 +86,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
     private void heartbeat() {
         synchronized (receivedStatus) {
             if (!receivedStatus.getAndSet(false) && getThing().getStatus() == ThingStatus.ONLINE) {
-                getThing().getChannels().stream().map(Channel::getUID).filter(this::isLinked)
-                        .forEach(c -> updateState(c, UnDefType.UNDEF));
+                setChannelsToUndef();
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                         "No data received for some time");
             }
@@ -96,20 +98,27 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         super.bridgeStatusChanged(bridgeStatusInfo);
         if (bridgeStatusInfo.getStatus() != ThingStatus.ONLINE) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
+            setChannelsToUndef();
             cachedBthomeData = new byte[0];
             cancelWatchdog();
             initInternal();
         }
     }
 
+    private void setChannelsToUndef() {
+        getThing().getChannels().stream().map(Channel::getUID).forEach(c -> updateState(c, UnDefType.UNDEF));
+    }
+
     @Override
     public void dispose() {
-        logger.info("[] Disposing BTHomeHandler", getThing().getUID());
+        logger.info("[{}] Disposing BTHomeHandler", getThing().getUID());
         try {
+            setChannelsToUndef();
             super.dispose();
         } finally {
             cancelWatchdog();
         }
+        isDisposed = true;
     }
 
     private void cancelWatchdog() {
@@ -124,15 +133,28 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         return new ArrayList<>();
     }
 
+    private Instant lastRefresh = Instant.EPOCH;
+
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
+        if(isDisposed) {
+            logger.warn("Handler is disposed, ignoring command {} to channel {}", command, channelUID);
+        }
         if (command instanceof RefreshType) {
-            processDataPacket(cachedBthomeData);
+            // Only accept refresh after 2 seconds since we will get this command for each channel
+            if (lastRefresh.plusSeconds(2).isBefore(Instant.now())) {
+                lastRefresh = Instant.now();
+                processDataPacket(cachedBthomeData);
+            }
         }
     }
 
     @Override
     public void onScanRecordReceived(BluetoothScanNotification scanNotification) {
+        if(isDisposed) {
+            logger.debug("Handler is disposed, ignoring scannotificatiom");
+        }
+
         synchronized (receivedStatus) {
             receivedStatus.set(true);
             super.onScanRecordReceived(scanNotification);
