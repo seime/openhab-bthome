@@ -137,7 +137,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if(isDisposed) {
+        if (isDisposed) {
             logger.warn("Handler is disposed, ignoring command {} to channel {}", command, channelUID);
         }
         if (command instanceof RefreshType) {
@@ -151,7 +151,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
     @Override
     public void onScanRecordReceived(BluetoothScanNotification scanNotification) {
-        if(isDisposed) {
+        if (isDisposed) {
             logger.debug("Handler is disposed, ignoring scannotificatiom");
         }
 
@@ -228,18 +228,18 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
                 for (BthomeServiceData.BthomeObjectId objectId : allGroupedMeasurements.keySet()) {
                     List<BthomeServiceData.BthomeMeasurement> measurementsOfType = allGroupedMeasurements.get(objectId);
-
-                    int counter = 0;
-                    for (BthomeServiceData.BthomeMeasurement measurement : measurementsOfType) {
-                        counter++;
-                        Channel channel = getChannel(objectId, allChannels, measurementsOfType.size() > 1, counter);
-                        if (channel != null) {
-                            updateChannelValue(measurement, objectId, channel);
-                        } else {
-                            logger.warn("No channel found for measurement: {}", objectId);
+                    if (measurementsOfType != null) {
+                        int counter = 0;
+                        for (BthomeServiceData.BthomeMeasurement measurement : measurementsOfType) {
+                            counter++;
+                            Channel channel = getChannel(objectId, allChannels, measurementsOfType.size() > 1, counter);
+                            if (channel != null) {
+                                updateChannelValue(measurement, objectId, channel);
+                            } else {
+                                logger.warn("No channel found for measurement: {}", objectId);
+                            }
                         }
                     }
-
                 }
             } catch (Exception e) {
                 logger.error("Error processing BTHome data", e);
@@ -733,6 +733,13 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 triggerChannel(channel.getUID(), event.toString() + (m.steps() > 0 ? "_" + m.steps() : ""));
                 break;
             }
+
+            case DEVICE_FW_VERSION_UINT32:
+            case DEVICE_FW_VERSION_UINT24:
+            case DEVICE_TYPE:
+                // These are handled in parseDeviceProperties
+                break;
+
         }
         if (state != null) {
             updateState(channel.getUID(), state);
@@ -821,9 +828,9 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         for (int counter = 1; counter <= numMeasurements; counter++) {
             String channelName = typeMapping.getChannelName() + (multipleMeasurementsOfSameType ? "_" + counter : "");
             ChannelUID channelUID = new ChannelUID(getThing().getUID(), channelName);
-            Channel existingChannel = currentChannels.stream().filter(c -> c.getUID().equals(channelUID)).findFirst()
-                    .orElse(null);
-            if (existingChannel == null) {
+            Optional<Channel> existingChannel = currentChannels.stream().filter(c -> c.getUID().equals(channelUID))
+                    .findFirst();
+            if (existingChannel.isEmpty()) {
                 String channelLabel = channelName.substring(0, 1).toUpperCase() + channelName.substring(1)
                         + (multipleMeasurementsOfSameType ? "_" + counter : "");
 
@@ -846,7 +853,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                     channels.add(newChannel);
                 }
             } else {
-                channels.add(existingChannel);
+                channels.add(existingChannel.get());
             }
         }
 
