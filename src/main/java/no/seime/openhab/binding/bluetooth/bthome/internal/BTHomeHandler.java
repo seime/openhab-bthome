@@ -119,6 +119,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
             cancelWatchdog();
         }
         isDisposed = true;
+        super.dispose();
     }
 
     private void cancelWatchdog() {
