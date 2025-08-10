@@ -408,7 +408,8 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 break;
             }
             case SENSOR_HUMIDITY_0_01: {
-                BthomeServiceData.BthomeSensorHumidity m = (BthomeServiceData.BthomeSensorHumidity) measurement.data();
+                BthomeServiceData.BthomeSensorHumidity001 m = (BthomeServiceData.BthomeSensorHumidity001) measurement
+                        .data();
                 state = toNumericState(channel, m.unit(), m.humidity());
                 break;
             }
