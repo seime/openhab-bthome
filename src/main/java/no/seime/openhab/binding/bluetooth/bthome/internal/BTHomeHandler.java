@@ -190,7 +190,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 }
 
                 ArrayList<BthomeServiceData.BthomeMeasurement> allDataFields = deviceData.measurement();
-                if (allDataFields.isEmpty()) {
+                if (allDataFields == null || allDataFields.isEmpty()) {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                             "Device sent no measurements.");
                     return;
