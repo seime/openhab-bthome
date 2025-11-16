@@ -168,7 +168,8 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
 
                 // Cache the data for the refresh command
                 if (updatedBthomeData != null) {
-                    logger.debug("[] Received updated BTHome data", getThing().getUID());
+                    logger.debug("[{}] Received updated BTHome data: {}", getThing().getUID(),
+                            Arrays.toString(updatedBthomeData));
                     cachedBthomeData = updatedBthomeData;
                     processDataPacket(cachedBthomeData);
                 }
@@ -225,9 +226,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 Map<BthomeServiceData.BthomeObjectId, List<BthomeServiceData.BthomeMeasurement>> allGroupedMeasurements = deviceMeasurements
                         .stream().collect(groupingBy(e -> e.objectId()));
 
-                List<Channel> currentChannels = getThing().getChannels();
-                List<Channel> allChannels = new ArrayList<>(currentChannels);
-                allChannels.addAll(createMissingChannels(currentChannels, allGroupedMeasurements));
+                List<Channel> allChannels = createChannelsIfMissing(getThing().getChannels(), allGroupedMeasurements);
 
                 for (BthomeServiceData.BthomeObjectId objectId : allGroupedMeasurements.keySet()) {
                     List<BthomeServiceData.BthomeMeasurement> measurementsOfType = allGroupedMeasurements.get(objectId);
@@ -764,9 +763,10 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                 .orElseThrow(() -> new IllegalArgumentException("No channel found for channel UID: " + channelUID));
     }
 
-    private List<Channel> createMissingChannels(List<Channel> currentChannels,
+    private List<Channel> createChannelsIfMissing(List<Channel> currentChannels,
             Map<BthomeServiceData.BthomeObjectId, List<BthomeServiceData.BthomeMeasurement>> measurements) {
 
+        List<Channel> allChannels = new ArrayList<>(currentChannels);
         List<Channel> newChannels = new ArrayList<>();
 
         Set<BthomeServiceData.BthomeObjectId> bthomeObjectIds = measurements.keySet();
@@ -789,12 +789,15 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
             newChannels.addAll(channels);
 
         }
-
         if (!newChannels.isEmpty()) {
-            updateThing(editThing().withChannels(newChannels).build());
+            logger.debug("Adding new channels: {}",
+                    newChannels.stream().map(Channel::getUID).collect(Collectors.toList()));
+            allChannels.addAll(newChannels);
+            Thing updatedThing = editThing().withChannels(allChannels).build();
+            updateThing(updatedThing);
         }
 
-        return newChannels;
+        return allChannels;
     }
 
     private State toSwitchState(BthomeServiceData.Bool8 value) {
@@ -822,17 +825,17 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         }
     }
 
-    private List<Channel> getOrCreateChannels(List<Channel> currentChannels, BTHomeTypeMapping typeMapping,
+    private List<Channel> getOrCreateChannels(List<Channel> exisingChannels, BTHomeTypeMapping typeMapping,
             int numMeasurements) {
 
         boolean multipleMeasurementsOfSameType = numMeasurements > 1;
 
-        List<Channel> channels = new ArrayList<>();
+        List<Channel> newChannels = new ArrayList<>();
 
         for (int counter = 1; counter <= numMeasurements; counter++) {
             String channelName = typeMapping.getChannelName() + (multipleMeasurementsOfSameType ? "_" + counter : "");
             ChannelUID channelUID = new ChannelUID(getThing().getUID(), channelName);
-            Optional<Channel> existingChannel = currentChannels.stream().filter(c -> c.getUID().equals(channelUID))
+            Optional<Channel> existingChannel = exisingChannels.stream().filter(c -> c.getUID().equals(channelUID))
                     .findFirst();
             if (existingChannel.isEmpty()) {
                 String channelLabel = channelName.substring(0, 1).toUpperCase() + channelName.substring(1)
@@ -844,7 +847,7 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                     Channel newChannel = ChannelBuilder.create(channelUID).withLabel(channelLabel)
                             .withKind(typeMapping.getChannelKind()).withType(newChannelType.getUID()).build();
                     dynamicChannelTypeProvider.putChannelType(newChannelType);
-                    channels.add(newChannel);
+                    newChannels.add(newChannel);
                 } else {
                     ChannelType newChannelType = createStateChannelType(channelName, channelName,
                             typeMapping.getItemType(), Set.of("Property"), typeMapping.getCategory());
@@ -854,14 +857,12 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
                             .withAcceptedItemType(typeMapping.getItemType()).build();
 
                     dynamicChannelTypeProvider.putChannelType(newChannelType);
-                    channels.add(newChannel);
+                    newChannels.add(newChannel);
                 }
-            } else {
-                channels.add(existingChannel.get());
             }
         }
 
-        return channels;
+        return newChannels;
     }
 
     protected ChannelType createStateChannelType(final String channelIdPrefix, final String label,

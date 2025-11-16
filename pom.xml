@@ -139,6 +139,19 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>4.33.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.neovisionaries</groupId>
+      <artifactId>nv-bluetooth</artifactId>
+      <version>1.8</version>
+      <scope>test</scope>
+    </dependency>
+
 
   </dependencies>
 
