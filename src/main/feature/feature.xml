@@ -2,10 +2,14 @@
 <features name="no.seime.openhab.binding.bluetooth.bthome-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
 	<repository>mvn:org.openhab.core.features.karaf/org.openhab.core.features.karaf.openhab-core/${ohc.version}/xml/features</repository>
 
+	<repository>
+		mvn:org.openhab.addons.features.karaf/org.openhab.addons.features.karaf.openhab-addons/${ohc.version}/xml/features
+	</repository>
+
 	<feature name="openhab-binding-bluetooth-bthome" description="Bluetooth Binding BTHome" version="${project.version}">
 		<feature>openhab-runtime-base</feature>
 		<feature>openhab-transport-serial</feature>
-		<bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.bluetooth/${project.version}</bundle>
+		<feature>openhab-binding-bluetooth</feature>
 		<bundle start-level="81">mvn:org.openhab.addons.bundles/no.seime.openhab.binding.bluetooth.bthome/${project.version}</bundle>
 	</feature>
 
