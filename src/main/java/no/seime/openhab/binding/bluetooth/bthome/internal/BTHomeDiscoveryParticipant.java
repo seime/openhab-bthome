@@ -26,13 +26,14 @@ import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.ThingUID;
 
 /**
- * This discovery participant is able to recognize ruuvitag devices and create discovery results for them.
+ * This discovery participant is able to recognize BTHome devices by looking for the presence of the BTHome Service Data
+ * UUID in the advertised services.
  *
  * @author Arne Seime - Initial contribution
  *
  */
 @NonNullByDefault
-// Commented out as we need access to the supplied serviceData - which isn't provided by openHAB
+// TODO no servicedata in discovery
 // @Component
 public class BTHomeDiscoveryParticipant implements BluetoothDiscoveryParticipant {
 
@@ -44,7 +45,6 @@ public class BTHomeDiscoveryParticipant implements BluetoothDiscoveryParticipant
     @Override
     public @Nullable ThingUID getThingUID(BluetoothDiscoveryDevice device) {
 
-        // TODO no data received on at least b-parasite sensor
         @Nullable
         BluetoothService service = device.getServices(UUID.fromString(BTHomeBindingConstants.SERVICEDATA_UUID));
         if (service != null) {

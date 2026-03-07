@@ -25,8 +25,9 @@ configuration.
 
 ## Discovery
 
-Discovery does not work as openHAB discovery mechanism doesn't provide the necessary service data (no manufacturerId is
-used by BTHome, only a custom service UUID). You need to know the Bluetooth address of the device to add it to openHAB.
+Discovery *does not work* as openHAB discovery mechanism doesn't provide the necessary service data (no manufacturerId
+is used by BTHome, only a custom service UUID). You need to know the Bluetooth address of the device to add it to
+openHAB.
 
 Please upvote https://github.com/openhab/openhab-addons/issues/16910 to get this supported.
 
