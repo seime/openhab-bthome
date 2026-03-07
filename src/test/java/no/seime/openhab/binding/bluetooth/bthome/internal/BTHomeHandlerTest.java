@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -114,22 +116,31 @@ class BTHomeHandlerTest {
     }
 
     @Test
-    void testParseMultiPackets() throws TextFormat.InvalidEscapeSequenceException {
+    void testEncryptedPacket() throws Exception {
+        // Example from bthome-ble: test_encryption_example_2
+        // MAC: 54:48:E6:8F:80:A5
+        // Bindkey: 231d39c1d7cc1ab1aee224cd096db932
+        // Encrypted payload (after D2FC): 41 87b9 00112233 72b0231f
+
+        Configuration config = new Configuration(
+                Map.of("address", "54:48:E6:8F:80:A5", "encryptionKey", "231d39c1d7cc1ab1aee224cd096db932"));
+        ((TestableBTHomeHandler) deviceHandler).setConfig(config);
         deviceHandler.initialize();
-        BluetoothScanNotification scanNotificationMeasurements = extractBTHomeDataFromProtobufLogMessage(
-                "\\002\\001\\006\\016\\026\\322\\374@\\000F\\001d\\002L\\b\\003\\201\\024");
-        deviceHandler.onScanRecordReceived(scanNotificationMeasurements);
-        BluetoothScanNotification scanNotificationBattery = extractBTHomeDataFromProtobufLogMessage(
-                "\\002\\001\\006\\r\\026\\322\\374@\\000@\\f\\321\\v\\020\\000\\021\\001");
-        deviceHandler.onScanRecordReceived(scanNotificationBattery);
-        assertEquals(7, deviceHandler.getThing().getChannels().size());
-        verifyChannelCreated("battery");
-        verifyChannelCreated("temperature");
-        verifyChannelCreated("humidity");
-        verifyChannelCreated("packet-id");
-        verifyChannelCreated("opening");
-        verifyChannelCreated("voltage");
-        verifyChannelCreated("power-on");
+
+        deviceHandler.processDataPacket(Hex.decode("4187b90011223372b0231f"));
+
+        // If decryption works, it should find a motion measurement (21 01 -> ON)
+        assertEquals(1, deviceHandler.getThing().getChannels().size());
+        verifyChannelCreated("motion");
+        verifyStateUpdated("motion", OnOffType.ON);
+    }
+
+    private byte[] reverse(byte[] array) {
+        byte[] result = new byte[array.length];
+        for (int i = 0; i < array.length; i++) {
+            result[i] = array[array.length - 1 - i];
+        }
+        return result;
     }
 
     private static BluetoothScanNotification extractBTHomeDataFromProtobufLogMessage(String content)
@@ -168,7 +179,6 @@ class BTHomeHandlerTest {
 
     private ThingImpl createThing() {
         ThingImpl thing = new ThingImpl(BTHomeBindingConstants.THING_TYPE_DEVICE, "device");
-        thing.setConfiguration(configuration);
         return thing;
     }
 }
