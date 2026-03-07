@@ -6,7 +6,6 @@
 
 [<img src="https://github.com/seime/support-me/blob/main/beer_me.png" width=150>](https://buymeacoffee.com/arnes)
 
-
 This binding adds support for [BTHome protocal standard devices](https://bthome.io/)
 
 This project is using https://github.com/koenvervloesem/BTHome-Kaitai-Struct to parse the BTHome protocol data.
@@ -21,7 +20,8 @@ Following thing type is supported by this extension:
 |---------------|----------------------------|
 | bthome        | BTHome V2 compliant device |
 
-Encryption is not yet supported, but let me know if you need it and I will add it.
+Encryption is supported for BTHome V2 devices. You need to configure the 32-character hex bindkey in the thing
+configuration.
 
 ## Discovery
 

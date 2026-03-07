@@ -21,13 +21,19 @@
 			<parameter name="address" type="text" required="true">
 				<context>network-address</context>
 				<label>MAC Address</label>
-				<description>MAC address of the device</description>
+				<description>MAC address of the device in format xx:xx:xx:xx:xx:xx</description>
+
 			</parameter>
 			<parameter name="expectedReportingIntervalSeconds" type="integer" required="false">
 				<label>Expected number of seconds between device broadcasting</label>
 				<description>Use the device configured reporting interval. A 10% grace period is added. If the device still hasn't
 					phoned home, it will be marked as offline</description>
 				<default>3600</default>
+			</parameter>
+			<parameter name="encryptionKey" type="text" required="false">
+				<label>Encryption Key</label>
+				<description>The 32-character (16-byte) hex encryption key for this device. If the device is not encrypted, leave
+					this empty.</description>
 			</parameter>
 
 		</config-description>

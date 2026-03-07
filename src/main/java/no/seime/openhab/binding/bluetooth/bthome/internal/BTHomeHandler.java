@@ -25,6 +25,12 @@ import java.util.stream.Collectors;
 
 import javax.measure.Unit;
 
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.AESEngine;
+import org.bouncycastle.crypto.modes.CCMBlockCipher;
+import org.bouncycastle.crypto.params.AEADParameters;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.util.encoders.Hex;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.bluetooth.BeaconBluetoothHandler;
@@ -42,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.kaitai.struct.ByteBufferKaitaiStream;
+import io.kaitai.struct.KaitaiStream;
 import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeServiceData;
 
 /**
@@ -63,6 +70,8 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
     private long heartbeatDelay = 3600;
     private byte[] cachedBthomeData = new byte[0];
     private boolean isDisposed = false;
+    private byte[] encryptionKey = new byte[0];
+    private String address = "";
 
     public BTHomeHandler(Thing thing, BTHomeChannelTypeProvider dynamicChannelTypeProvider) {
         super(thing);
@@ -81,7 +90,30 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Waiting for device to wake up.");
         setChannelsToUndef();
         BTHomeConfiguration config = getConfig().as(BTHomeConfiguration.class);
+        if (config.address == null || config.address.isEmpty() || config.address.length() != 17) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "Address in format AA:BB:CC:DD:EE:FF must be specified.");
+            return;
+        }
+        address = config.address;
         heartbeatDelay = (long) (config.expectedReportingIntervalSeconds * 1.1);
+        if (config.encryptionKey != null && !config.encryptionKey.isEmpty()) {
+            try {
+                encryptionKey = Hex.decode(config.encryptionKey);
+            } catch (Exception e) {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                        "Invalid encryption key format. Must be a hex string.");
+                return;
+            }
+
+            if (encryptionKey.length != 16) {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                        "Invalid encryption key length. Must be 16 bytes (32 hex characters).");
+                return;
+            }
+
+        }
+
         watchDogFuture = scheduler.scheduleWithFixedDelay(this::heartbeat, heartbeatDelay, heartbeatDelay,
                 TimeUnit.SECONDS);
     }
@@ -187,13 +219,26 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
             try {
                 BthomeServiceData deviceData = new BthomeServiceData(new ByteBufferKaitaiStream(bthomeData));
                 boolean isEncrypted = deviceData.deviceInformation().encryption();
+
+                List<BthomeServiceData.BthomeMeasurement> allDataFields;
                 if (isEncrypted) {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                            "Device sent encrypted data, but encryption is not yet supported in the binding.");
-                    return;
+                    if (encryptionKey == null || encryptionKey.length != 16) {
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                                "Device sent encrypted data, but no encryption key is configured.");
+                        return;
+                    }
+
+                    try {
+                        allDataFields = decryptPayload(bthomeData, deviceData, address);
+                    } catch (InvalidCipherTextException e) {
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                                "Device sent encrypted data, decryption failed. Check encryption key.");
+                        return;
+                    }
+                } else {
+                    allDataFields = deviceData.measurement();
                 }
 
-                ArrayList<BthomeServiceData.BthomeMeasurement> allDataFields = deviceData.measurement();
                 if (allDataFields == null || allDataFields.isEmpty()) {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                             "Device sent no measurements.");
@@ -258,6 +303,40 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
             // Received Bluetooth scan with no service data
             // This happens -- we ignore this silently.
         }
+    }
+
+    private List<BthomeServiceData.BthomeMeasurement> decryptPayload(byte[] bthomeData, BthomeServiceData deviceData,
+            String address) throws InvalidCipherTextException {
+
+        byte[] nonce = new byte[13];
+        byte[] mac = Hex.decode(address.replace(":", ""));
+
+        // MAC
+        System.arraycopy(mac, 0, nonce, 0, 6);
+        nonce[6] = (byte) 0xD2;
+        nonce[7] = (byte) 0xFC;
+        nonce[8] = bthomeData[0];
+        System.arraycopy(deviceData.counter(), 0, nonce, 9, 4);
+
+        byte[] ciphertext = deviceData.ciphertext();
+        byte[] mic = deviceData.mic();
+
+        byte[] encryptedData = new byte[ciphertext.length + mic.length];
+        System.arraycopy(ciphertext, 0, encryptedData, 0, ciphertext.length);
+        System.arraycopy(mic, 0, encryptedData, ciphertext.length, mic.length);
+
+        CCMBlockCipher cipher = new CCMBlockCipher(new AESEngine());
+        // V2 AAD is None (null)
+        AEADParameters parameters = new AEADParameters(new KeyParameter(encryptionKey), 32, nonce, null);
+        cipher.init(false, parameters);
+        byte[] decryptedPayload = cipher.processPacket(encryptedData, 0, encryptedData.length);
+
+        KaitaiStream decryptedStream = new ByteBufferKaitaiStream(decryptedPayload);
+        List<BthomeServiceData.BthomeMeasurement> allDataFields = new ArrayList<>();
+        while (!decryptedStream.isEof()) {
+            allDataFields.add(new BthomeServiceData.BthomeMeasurement(decryptedStream, deviceData, deviceData._root()));
+        }
+        return allDataFields;
     }
 
     private Map<String, String> parseDeviceProperties(List<BthomeServiceData.BthomeMeasurement> deviceProperties) {

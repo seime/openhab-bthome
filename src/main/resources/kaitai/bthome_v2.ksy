@@ -19,13 +19,13 @@ seq:
     repeat: eos
   - id: ciphertext
     if: device_information.bthome_version == 2 and device_information.encryption == true
-    size: _io.size - _io.pos - counter._sizeof - mic._sizeof
+    size: _io.size - _io.pos - 4 - 4
   - id: counter
     if: device_information.bthome_version == 2 and device_information.encryption == true
-    type: u4be
+    size: 4
   - id: mic
     if: device_information.bthome_version == 2 and device_information.encryption == true
-    type: u4be
+    size: 4
 types:
   bthome_device_information:
     seq:

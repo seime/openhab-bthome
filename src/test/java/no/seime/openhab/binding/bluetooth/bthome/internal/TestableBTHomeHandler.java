@@ -10,8 +10,14 @@ public class TestableBTHomeHandler extends BTHomeHandler {
         super(thing, dynamicChannelTypeProvider);
     }
 
+    private Configuration config;
+
+    public void setConfig(Configuration config) {
+        this.config = config;
+    }
+
     @Override
     protected Configuration getConfig() {
-        return new Configuration((Map.of("address", "00:00:00:00:00:00")));
+        return config != null ? config : new Configuration((Map.of("address", "00:00:00:00:00:00")));
     }
 }
