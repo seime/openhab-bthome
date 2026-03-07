@@ -7,7 +7,7 @@
         <feature>wrap</feature>
         <bundle>mvn:org.bouncycastle/bcprov-jdk18on/1.76</bundle>
         <bundle>mvn:org.openhab.addons.bundles/no.seime.openhab.binding.bluetooth.bthome/4.1.0-SNAPSHOT</bundle>
-        <bundle>wrap:mvn:io.kaitai/kaitai-struct-runtime/0.10</bundle>
+        <bundle>wrap:mvn:io.kaitai/kaitai-struct-runtime/0.11</bundle>
         <bundle>wrap:mvn:org.lastnpe.eea/eea-all/2.2.1</bundle>
     </feature>
 </features>

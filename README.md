@@ -38,6 +38,7 @@ Supported configuration parameters for the things:
 |------------------------------------|---------|---------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `address`                          | String  |         | Yes      | Bluetooth address of the device (in format `XX:XX:XX:XX:XX:XX`)                                                                                                                                                  |
 | `expectedReportingIntervalSeconds` | integer | 3600    | No       | Expected reporting interval in seconds. If the device hasn't phoned home within this deadline, channels are marked as `UNDEF` and device will become `OFFLINE`. Note: A 10% grace period is added to this value. |
+| `encryptionKey`                    | String  |         | No       | 32-character hex bindkey for encryption.                                                                                                                                                                         
 
 ## Channels
 
@@ -50,6 +51,6 @@ Bluetooth proxy):
 
 ```
 Bridge bluetooth:esphome:proxy "My ESP Bluetooth proxy" [ backgroundDiscovery=true ] {
-    bthome my-device "BTHome broadcasting device" [ address="00:00:00:00:00:00", expectedReportingIntervalSeconds = 600]
+    bthome my-device "BTHome broadcasting device" [ address="00:00:00:00:00:00", expectedReportingIntervalSeconds = 600, encryptionKey = "0123456789abcdef0123456789abcdef" ]
 }
 ```

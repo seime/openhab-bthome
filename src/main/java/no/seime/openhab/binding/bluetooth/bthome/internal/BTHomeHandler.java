@@ -316,10 +316,10 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         nonce[6] = (byte) 0xD2;
         nonce[7] = (byte) 0xFC;
         nonce[8] = bthomeData[0];
-        System.arraycopy(deviceData.counter(), 0, nonce, 9, 4);
+        System.arraycopy(mapU4be(deviceData.counter()), 0, nonce, 9, 4);
 
         byte[] ciphertext = deviceData.ciphertext();
-        byte[] mic = deviceData.mic();
+        byte[] mic = mapU4be(deviceData.mic());
 
         byte[] encryptedData = new byte[ciphertext.length + mic.length];
         System.arraycopy(ciphertext, 0, encryptedData, 0, ciphertext.length);
@@ -905,6 +905,14 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         } else {
             return new DecimalType(value);
         }
+    }
+
+    private byte[] mapU4be(Long value) {
+        if (value == null) {
+            return new byte[4];
+        }
+        return new byte[] { (byte) ((value >> 24) & 0xFF), (byte) ((value >> 16) & 0xFF), (byte) ((value >> 8) & 0xFF),
+                (byte) (value & 0xFF) };
     }
 
     private List<Channel> getOrCreateChannels(List<Channel> exisingChannels, BTHomeTypeMapping typeMapping,
