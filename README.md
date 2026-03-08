@@ -12,24 +12,20 @@ This project is using https://github.com/koenvervloesem/BTHome-Kaitai-Struct to 
 
 ## Supported Things
 
-Following thing type is supported by this extension:
+Any BTHome device that supports the BTHome V2 protocol standard
 
-* Any BTHome device that supports the BTHome V2 protocol standard
-
-| Thing Type ID | Description                |
-|---------------|----------------------------|
-| bthome        | BTHome V2 compliant device |
-
-Encryption is supported for BTHome V2 devices. You need to configure the 32-character hex bindkey in the thing
-configuration.
+| Thing Type ID | Description                    |
+|---------------|--------------------------------|
+| bthome        | Any BTHome V2 compliant device |
 
 ## Discovery
 
-Discovery *does not work* as openHAB discovery mechanism doesn't provide the necessary service data (no manufacturerId
-is used by BTHome, only a custom service UUID). You need to know the Bluetooth address of the device to add it to
-openHAB.
+I recommend **disabling** background discovery of Bluetooth devices on your adapter as you may be overwhelmed by lots of
+devices that aren't supported by neither this nor the generic Bluetooth binding.
 
-Please upvote https://github.com/openhab/openhab-addons/issues/16910 to get this supported.
+Choose the **Bluetooth Binding** when doing discovery, not the *BTHome Binding*.
+
+Discovery is based on a list of known device names, so custom devices may not be discovered. Add those manually.
 
 ## Thing Configuration
 
@@ -43,7 +39,7 @@ Supported configuration parameters for the things:
 
 ## Channels
 
-Channels are created dynamically based on the device's capabilities.
+Channels are created dynamically based on the device's capabilities. All are read-only.
 
 ## Example
 
@@ -51,7 +47,7 @@ Channels are created dynamically based on the device's capabilities.
 Bluetooth proxy):
 
 ```
-Bridge bluetooth:esphome:proxy "My ESP Bluetooth proxy" [ backgroundDiscovery=true ] {
+Bridge bluetooth:esphome:proxy "My ESP Bluetooth proxy" [ backgroundDiscovery=false ] {
     bthome my-device "BTHome broadcasting device" [ address="00:00:00:00:00:00", expectedReportingIntervalSeconds = 600, encryptionKey = "0123456789abcdef0123456789abcdef" ]
 }
 ```

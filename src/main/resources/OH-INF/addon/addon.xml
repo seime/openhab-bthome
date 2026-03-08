@@ -6,5 +6,6 @@
 	<type>binding</type>
 	<name>BTHome Binding</name>
 	<description>This is the binding for Bluetooth devices speaking BTHome standard</description>
+	<connection>local</connection>
 
 </addon:addon>

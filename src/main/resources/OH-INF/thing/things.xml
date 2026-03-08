@@ -32,7 +32,8 @@
 			</parameter>
 			<parameter name="encryptionKey" type="text" required="false">
 				<label>Encryption Key</label>
-				<description>The 32-character (16-byte) hex encryption key for this device. If the device is not encrypted, leave
+				<description>The 32-character (16-byte) hex encryption key for this device. If the device is not encrypted, you can
+					leave
 					this empty.</description>
 			</parameter>
 
