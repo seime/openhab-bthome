@@ -41,6 +41,13 @@ Supported configuration parameters for the things:
 
 Channels are created dynamically based on the device's capabilities. All are read-only.
 
+Channels are added to the Thing as measurement types are seen in the device's broadcasts, but all channel types are
+statically defined (`bluetooth:bthome-<measurement>`, e.g. `bluetooth:bthome-temperature`) and shared across devices.
+If a device sends several measurements of the same type, channels are suffixed with `_1`, `_2`, etc.
+
+Note: Things created with earlier versions of the binding used one dynamically created channel type per Thing. These are
+migrated to the static channel types automatically when the Thing is initialized.
+
 ## Example
 
 `bthome.things` with Bluetooth adapter config included (in this example, an ESP32 running ESPHome firmware acting as a

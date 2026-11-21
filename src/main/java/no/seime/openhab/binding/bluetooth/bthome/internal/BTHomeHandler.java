@@ -12,19 +12,9 @@
  */
 package no.seime.openhab.binding.bluetooth.bthome.internal;
 
-import static java.util.stream.Collectors.groupingBy;
-
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.*;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import javax.measure.Unit;
-
+import io.kaitai.struct.ByteBufferKaitaiStream;
+import io.kaitai.struct.KaitaiStream;
+import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeServiceData;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.modes.CCMBlockCipher;
@@ -39,17 +29,26 @@ import org.openhab.core.library.types.*;
 import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.builder.ChannelBuilder;
 import org.openhab.core.thing.type.ChannelKind;
-import org.openhab.core.thing.type.ChannelType;
-import org.openhab.core.thing.type.ChannelTypeBuilder;
 import org.openhab.core.thing.type.ChannelTypeUID;
-import org.openhab.core.types.*;
+import org.openhab.core.types.Command;
+import org.openhab.core.types.RefreshType;
+import org.openhab.core.types.State;
+import org.openhab.core.types.UnDefType;
 import org.openhab.core.types.util.UnitUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kaitai.struct.ByteBufferKaitaiStream;
-import io.kaitai.struct.KaitaiStream;
-import no.seime.openhab.binding.bluetooth.bthome.internal.datastructure.BthomeServiceData;
+import javax.measure.Unit;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  * The {@link BTHomeHandler} is responsible for handling commands, which are
@@ -83,7 +82,40 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
         logger.info("[{}] Initializing BTHomeHandler", getThing().getUID());
         super.initialize();
 
+        migrateLegacyChannelTypes();
         initInternal();
+    }
+
+    /**
+     * Earlier versions created one dynamic channel type per thing and channel
+     * (bluetooth:bthome-&lt;thingId&gt;-&lt;channelName&gt;). Rewrite such channels to use the static channel types
+     * defined in channel-types.xml and remove the legacy channel types from storage.
+     */
+    private void migrateLegacyChannelTypes() {
+        String legacyPrefix = "bthome-" + getThing().getUID().getId() + "-";
+        List<Channel> channels = new ArrayList<>();
+        Set<ChannelTypeUID> legacyChannelTypes = new HashSet<>();
+
+        for (Channel channel : getThing().getChannels()) {
+            ChannelTypeUID channelTypeUID = channel.getChannelTypeUID();
+            if (channelTypeUID != null && channelTypeUID.getId().startsWith(legacyPrefix)) {
+                String channelName = channel.getUID().getId().replaceFirst("_\\d+$", "");
+                BTHomeTypeMapping typeMapping = BTHomeTypeMapping.fromChannelName(channelName);
+                if (typeMapping != null) {
+                    logger.debug("[{}] Migrating channel {} from channel type {} to {}", getThing().getUID(),
+                            channel.getUID(), channelTypeUID, typeMapping.getChannelTypeUID());
+                    channels.add(ChannelBuilder.create(channel).withType(typeMapping.getChannelTypeUID()).build());
+                    legacyChannelTypes.add(channelTypeUID);
+                    continue;
+                }
+            }
+            channels.add(channel);
+        }
+
+        if (!legacyChannelTypes.isEmpty()) {
+            updateThing(editThing().withChannels(channels).build());
+            dynamicChannelTypeProvider.removeChannelTypes(legacyChannelTypes);
+        }
     }
 
     private void initInternal() {
@@ -928,66 +960,20 @@ public class BTHomeHandler extends BeaconBluetoothHandler {
             Optional<Channel> existingChannel = exisingChannels.stream().filter(c -> c.getUID().equals(channelUID))
                     .findFirst();
             if (existingChannel.isEmpty()) {
-                String channelLabel = channelName.substring(0, 1).toUpperCase() + channelName.substring(1)
-                        + (multipleMeasurementsOfSameType ? "_" + counter : "");
+                String baseName = typeMapping.getChannelName();
+                String channelLabel = baseName.substring(0, 1).toUpperCase() + baseName.substring(1).replace('-', ' ')
+                        + (multipleMeasurementsOfSameType ? " " + counter : "");
 
-                if (typeMapping.getChannelKind() == ChannelKind.TRIGGER) {
-                    ChannelType newChannelType = createTriggerChannelType(channelName, channelLabel, typeMapping);
-                    Channel newChannel = ChannelBuilder.create(channelUID).withLabel(channelLabel)
-                            .withKind(typeMapping.getChannelKind()).withType(newChannelType.getUID()).build();
-                    dynamicChannelTypeProvider.putChannelType(newChannelType);
-                    newChannels.add(newChannel);
-                } else {
-                    ChannelType newChannelType = createStateChannelType(channelName, channelName,
-                            typeMapping.getItemType(), typeMapping);
-
-                    Channel newChannel = ChannelBuilder.create(channelUID).withLabel(channelLabel)
-                            .withKind(typeMapping.getChannelKind()).withType(newChannelType.getUID())
-                            .withAcceptedItemType(typeMapping.getItemType()).build();
-
-                    dynamicChannelTypeProvider.putChannelType(newChannelType);
-                    newChannels.add(newChannel);
+                ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID).withLabel(channelLabel)
+                        .withKind(typeMapping.getChannelKind()).withType(typeMapping.getChannelTypeUID());
+                if (typeMapping.getChannelKind() == ChannelKind.STATE) {
+                    channelBuilder.withAcceptedItemType(typeMapping.getItemType());
                 }
+                newChannels.add(channelBuilder.build());
             }
         }
 
         return newChannels;
-    }
-
-    protected ChannelType createStateChannelType(final String channelIdPrefix, final String label,
-            final String itemType, BTHomeTypeMapping typeMapping) {
-        final ChannelTypeUID channelTypeUID = createChannelTypeUID(channelIdPrefix);
-
-        StateDescriptionFragmentBuilder stateDescription = StateDescriptionFragmentBuilder.create().withReadOnly(true);
-        final ChannelTypeBuilder channelTypeBuilder = ChannelTypeBuilder.state(channelTypeUID, label, itemType)
-                .withStateDescriptionFragment(stateDescription.build());
-
-        return buildChannelType(channelTypeBuilder, typeMapping);
-    }
-
-    protected ChannelType createTriggerChannelType(final String channelIdPrefix, final String label,
-            BTHomeTypeMapping typeMapping) {
-        final ChannelTypeUID channelTypeUID = createChannelTypeUID(channelIdPrefix);
-        return buildChannelType(ChannelTypeBuilder.trigger(channelTypeUID, label), typeMapping);
-    }
-
-    private ChannelType buildChannelType(ChannelTypeBuilder channelTypeBuilder, BTHomeTypeMapping typeMapping) {
-        channelTypeBuilder.isAdvanced(typeMapping.isAdvanced());
-
-        channelTypeBuilder.withTags(Set.of("Property"));
-        if (typeMapping.getCategory() != null) {
-            channelTypeBuilder.withCategory(typeMapping.getCategory());
-        }
-
-        ChannelType channelType = channelTypeBuilder.build();
-        logger.debug("Created new channel type {}", channelType.getUID());
-        return channelType;
-    }
-
-    private ChannelTypeUID createChannelTypeUID(String channelName) {
-        String uid = String.format("bthome-%s-%s", getThing().getUID().getId(), channelName);
-        final ChannelTypeUID channelTypeUID = new ChannelTypeUID("bluetooth", uid);
-        return channelTypeUID;
     }
 
     @Override

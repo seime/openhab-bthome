@@ -2,10 +2,12 @@ package no.seime.openhab.binding.bluetooth.bthome.internal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.AfterEach;
@@ -23,9 +25,13 @@ import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.SIUnits;
 import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.Channel;
+import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.binding.ThingHandlerCallback;
+import org.openhab.core.thing.binding.builder.ChannelBuilder;
 import org.openhab.core.thing.internal.ThingImpl;
+import org.openhab.core.thing.type.ChannelKind;
+import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.State;
 
 import com.google.protobuf.ByteString;
@@ -84,6 +90,39 @@ class BTHomeHandlerTest {
                 .findFirst().isPresent());
         assertTrue(deviceHandler.getThing().getChannels().stream().filter(e -> e.getUID().getId().equals("battery"))
                 .findFirst().isEmpty());
+
+        // Both battery channels share the same static channel type
+        ChannelTypeUID batteryType = new ChannelTypeUID("bluetooth", "bthome-battery");
+        assertEquals(batteryType, getChannel("battery_1").getChannelTypeUID());
+        assertEquals(batteryType, getChannel("battery_2").getChannelTypeUID());
+        assertEquals("Battery 1", getChannel("battery_1").getLabel());
+        Mockito.verify(channelTypeProvider, Mockito.never()).putChannelType(any());
+    }
+
+    @Test
+    void testMigrateLegacyChannelTypes() {
+        ChannelTypeUID legacyType = new ChannelTypeUID("bluetooth", "bthome-device-temperature");
+        ChannelTypeUID legacyBatteryType = new ChannelTypeUID("bluetooth", "bthome-device-battery_2");
+        ChannelTypeUID otherType = new ChannelTypeUID("bluetooth", "some-other-type");
+        ThingImpl legacyThing = createThing();
+        legacyThing.addChannel(ChannelBuilder.create(new ChannelUID(legacyThing.getUID(), "temperature"))
+                .withType(legacyType).withLabel("Temperature").build());
+        legacyThing.addChannel(ChannelBuilder.create(new ChannelUID(legacyThing.getUID(), "battery_2"))
+                .withType(legacyBatteryType).withLabel("Battery_2_2").build());
+        legacyThing.addChannel(
+                ChannelBuilder.create(new ChannelUID(legacyThing.getUID(), "custom")).withType(otherType).build());
+
+        deviceHandler = Mockito.spy(new TestableBTHomeHandler(legacyThing, channelTypeProvider));
+        deviceHandler.setCallback(thingHandlerCallback);
+        deviceHandler.initialize();
+
+        assertEquals(3, deviceHandler.getThing().getChannels().size());
+        assertEquals(new ChannelTypeUID("bluetooth", "bthome-temperature"),
+                getChannel("temperature").getChannelTypeUID());
+        assertEquals(new ChannelTypeUID("bluetooth", "bthome-battery"), getChannel("battery_2").getChannelTypeUID());
+        assertEquals("Temperature", getChannel("temperature").getLabel());
+        assertEquals(otherType, getChannel("custom").getChannelTypeUID());
+        Mockito.verify(channelTypeProvider).removeChannelTypes(Set.of(legacyType, legacyBatteryType));
     }
 
     @Test
@@ -113,6 +152,46 @@ class BTHomeHandlerTest {
         verifyStateUpdated("rotation", new QuantityType<>(307.40000000000003, Units.DEGREE_ANGLE));
 
         assertEquals("2", deviceHandler.getThing().getProperties().get("deviceType"));
+    }
+
+    @Test
+    void testMeasurementsSplitAcrossPackets() {
+        deviceHandler.initialize();
+
+        // Packet 1: packet id 1, temperature 25.06, humidity 50.55
+        deviceHandler.processDataPacket(Hex.decode("40000102CA0903BF13"));
+        assertChannels("packet-id", "temperature", "humidity");
+        verifyStateUpdated("temperature", new QuantityType<>(25.06, SIUnits.CELSIUS));
+
+        // Packet 2: packet id 2, battery 100, button press - existing channels must be kept
+        deviceHandler.processDataPacket(Hex.decode("40000201643A01"));
+        assertChannels("packet-id", "temperature", "humidity", "battery", "button");
+        verifyStateUpdated("battery", new QuantityType<>(100, Units.PERCENT));
+        ChannelUID buttonUID = getChannel("button").getUID();
+        Mockito.verify(thingHandlerCallback).channelTriggered(Mockito.any(), Mockito.eq(buttonUID),
+                Mockito.eq("PRESS"));
+
+        // Packet 3: same measurements as packet 1 again - no new channels
+        deviceHandler.processDataPacket(Hex.decode("40000302CA0903BF13"));
+        assertChannels("packet-id", "temperature", "humidity", "battery", "button");
+
+        // Packet 4: two battery measurements - numbered channels are added next to the existing one
+        deviceHandler.processDataPacket(Hex.decode("4000040164010A"));
+        assertChannels("packet-id", "temperature", "humidity", "battery", "button", "battery_1", "battery_2");
+        verifyStateUpdated("battery_1", new QuantityType<>(100, Units.PERCENT));
+        verifyStateUpdated("battery_2", new QuantityType<>(10, Units.PERCENT));
+
+        // Kind and accepted item type per channel
+        assertEquals("Number:Temperature", getChannel("temperature").getAcceptedItemType());
+        assertEquals("Number:Dimensionless", getChannel("battery_2").getAcceptedItemType());
+        assertEquals(ChannelKind.TRIGGER, getChannel("button").getKind());
+        assertEquals(ChannelKind.STATE, getChannel("humidity").getKind());
+    }
+
+    private void assertChannels(String... expected) {
+        List<String> actual = deviceHandler.getThing().getChannels().stream().map(c -> c.getUID().getId()).toList();
+        assertEquals(expected.length, actual.size(), "Unexpected channels " + actual);
+        assertEquals(Set.of(expected), Set.copyOf(actual));
     }
 
     @Test
@@ -167,6 +246,11 @@ class BTHomeHandlerTest {
         Channel channel = deviceHandler.getThing().getChannels().stream()
                 .filter(e -> e.getUID().getId().equals(channelName)).findFirst().get();
         Mockito.verify(thingHandlerCallback).stateUpdated(channel.getUID(), state);
+    }
+
+    private Channel getChannel(String channelName) {
+        return deviceHandler.getThing().getChannels().stream().filter(e -> e.getUID().getId().equals(channelName))
+                .findFirst().orElseThrow();
     }
 
     private void verifyChannelCreated(String channelName) {

@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="bluetooth"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<channel-type id="bthome-packet-id" advanced="true">
+		<item-type>Number</item-type>
+		<label>Packet ID</label>
+		<category>text</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-acceleration">
+		<item-type>Number:Acceleration</item-type>
+		<label>Acceleration</label>
+		<category>motion</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-battery">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery</label>
+		<category>batterylevel</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-co2">
+		<item-type>Number:Concentration</item-type>
+		<label>CO2</label>
+		<category>carbondioxide</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-count">
+		<item-type>Number</item-type>
+		<label>Count</label>
+		<category>text</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-current">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Current</label>
+		<category>energy</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-dewpoint">
+		<item-type>Number:Temperature</item-type>
+		<label>Dewpoint</label>
+		<category>temperature</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-duration">
+		<item-type>Number:Time</item-type>
+		<label>Duration</label>
+		<category>time</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-distance">
+		<item-type>Number:Length</item-type>
+		<label>Distance</label>
+		<category>text</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Energy</label>
+		<category>energy</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-gas">
+		<item-type>Number:Volume</item-type>
+		<label>Gas</label>
+		<category>gas</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-gyroscope">
+		<item-type>Number:Angle</item-type>
+		<label>Gyroscope</label>
+		<category>motion</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-humidity">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Humidity</label>
+		<category>humidity</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-illuminance">
+		<item-type>Number:Illuminance</item-type>
+		<label>Illuminance</label>
+		<category>light</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-mass">
+		<item-type>Number:Mass</item-type>
+		<label>Mass</label>
+		<category>text</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-moisture">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Moisture</label>
+		<category>humidity</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-pm25">
+		<item-type>Number:Density</item-type>
+		<label>PM2.5</label>
+		<category>smoke</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-pm10">
+		<item-type>Number:Density</item-type>
+		<label>PM10</label>
+		<category>smoke</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-power">
+		<item-type>Number:Power</item-type>
+		<label>Power</label>
+		<category>energy</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-pressure">
+		<item-type>Number:Pressure</item-type>
+		<label>Pressure</label>
+		<category>pressure</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-raw">
+		<item-type>String</item-type>
+		<label>Raw</label>
+		<category>text</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-rotation">
+		<item-type>Number:Angle</item-type>
+		<label>Rotation</label>
+		<category>incline</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-speed">
+		<item-type>Number:Speed</item-type>
+		<label>Speed</label>
+		<category>motion</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-temperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Temperature</label>
+		<category>temperature</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-text">
+		<item-type>String</item-type>
+		<label>Text</label>
+		<category>text</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-timestamp">
+		<item-type>DateTime</item-type>
+		<label>Timestamp</label>
+		<category>time</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-tvoc">
+		<item-type>Number:Density</item-type>
+		<label>TVOC</label>
+		<category>smoke</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Voltage</label>
+		<category>energy</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-volume">
+		<item-type>Number:Volume</item-type>
+		<label>Volume</label>
+		<category>sewerage</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-volume-storage">
+		<item-type>Number:Volume</item-type>
+		<label>Volume Storage</label>
+		<category>sewerage</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-volume-flow-rate">
+		<item-type>Number:VolumetricFlowRate</item-type>
+		<label>Volume Flow Rate</label>
+		<category>flow</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-uv-index">
+		<item-type>Number</item-type>
+		<label>UV Index</label>
+		<category>sun</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-water">
+		<item-type>Number:Volume</item-type>
+		<label>Water</label>
+		<category>water</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-battery-low">
+		<item-type>Switch</item-type>
+		<label>Battery Low</label>
+		<category>battery</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-battery-charging">
+		<item-type>Switch</item-type>
+		<label>Battery Charging</label>
+		<category>battery</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-carbon-monoxide-detected">
+		<item-type>Switch</item-type>
+		<label>Carbon Monoxide Detected</label>
+		<category>gas</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-cold">
+		<item-type>Switch</item-type>
+		<label>Cold</label>
+		<category>snow</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-connectivity">
+		<item-type>Switch</item-type>
+		<label>Connectivity</label>
+		<category>network</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-door">
+		<item-type>Contact</item-type>
+		<label>Door</label>
+		<category>door</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-garage-door">
+		<item-type>Contact</item-type>
+		<label>Garage Door</label>
+		<category>garagedoor</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-gas-detected">
+		<item-type>Switch</item-type>
+		<label>Gas Detected</label>
+		<category>gas</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-generic">
+		<item-type>Switch</item-type>
+		<label>Generic</label>
+		<category>text</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-heat-detected">
+		<item-type>Switch</item-type>
+		<label>Heat Detected</label>
+		<category>fire</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-light-detected">
+		<item-type>Switch</item-type>
+		<label>Light Detected</label>
+		<category>light</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-lock">
+		<item-type>Switch</item-type>
+		<label>Lock</label>
+		<category>lock</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-moisture-detected">
+		<item-type>Switch</item-type>
+		<label>Moisture Detected</label>
+		<category>humidity</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-motion">
+		<item-type>Switch</item-type>
+		<label>Motion</label>
+		<category>motion</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-moving">
+		<item-type>Switch</item-type>
+		<label>Moving</label>
+		<category>motion</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-occupancy">
+		<item-type>Switch</item-type>
+		<label>Occupancy</label>
+		<category>motion</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-opening">
+		<item-type>Contact</item-type>
+		<label>Opening</label>
+		<category>door</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-plug">
+		<item-type>Switch</item-type>
+		<label>Plug</label>
+		<category>poweroutlet_eu</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-power-on">
+		<item-type>Switch</item-type>
+		<label>Power On</label>
+		<category>switch</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-presence">
+		<item-type>Switch</item-type>
+		<label>Presence</label>
+		<category>motion</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-problem">
+		<item-type>Switch</item-type>
+		<label>Problem</label>
+		<category>text</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-running">
+		<item-type>Switch</item-type>
+		<label>Running</label>
+		<category>switch</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-safety">
+		<item-type>Switch</item-type>
+		<label>Safety</label>
+		<category>alarm</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-smoke">
+		<item-type>Switch</item-type>
+		<label>Smoke</label>
+		<category>smoke</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-sound">
+		<item-type>Switch</item-type>
+		<label>Sound</label>
+		<category>soundvolume_mute</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-tamper">
+		<item-type>Switch</item-type>
+		<label>Tamper</label>
+		<category>alarm</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-vibration">
+		<item-type>Switch</item-type>
+		<label>Vibration</label>
+		<category>motion</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-window">
+		<item-type>Contact</item-type>
+		<label>Window</label>
+		<category>window</category>
+		<tags>
+			<tag>Property</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="bthome-button">
+		<kind>trigger</kind>
+		<label>Button</label>
+		<category>motion</category>
+	</channel-type>
+
+	<channel-type id="bthome-dimmer">
+		<kind>trigger</kind>
+		<label>Dimmer</label>
+		<category>light</category>
+	</channel-type>
+</thing:thing-descriptions>
