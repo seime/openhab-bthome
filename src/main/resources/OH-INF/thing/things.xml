@@ -31,6 +31,7 @@
 				<default>3600</default>
 			</parameter>
 			<parameter name="encryptionKey" type="text" required="false">
+				<context>password</context>
 				<label>Encryption Key</label>
 				<description>The 32-character (16-byte) hex encryption key for this device. If the device is not encrypted, you can
 					leave
