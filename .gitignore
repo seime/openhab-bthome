@@ -1,0 +1,5 @@
+.vscode
+.idea
+.claude/
+*.iml
+target/

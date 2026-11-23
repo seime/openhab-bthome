@@ -16,16 +16,6 @@
 
   <name>Seime Add-ons :: Bundles :: BTHome</name>
 
-  <properties>
-    <oh.java.version>17</oh.java.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>${oh.java.version}</maven.compiler.target>
-    <maven.compiler.compilerVersion>${oh.java.version}</maven.compiler.compilerVersion>
-    <spotless.version>2.36.0</spotless.version>
-
-
-  </properties>
-
   <distributionManagement>
     <snapshotRepository>
       <id>github</id>
@@ -62,7 +52,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.8.0</version>
         <executions>
           <execution>
             <id>add-source</id>
@@ -93,7 +83,6 @@
   </build>
 
   <dependencies>
-
     <dependency>
       <groupId>io.kaitai</groupId>
       <artifactId>kaitai-struct-runtime</artifactId>
@@ -108,57 +97,30 @@
     </dependency>
 
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>32.1.2-jre</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
-      <version>1.76</version>
+      <version>1.87</version>
     </dependency>
 
-
     <dependency>
+      <!-- Keeps Import-Package org.slf4j at [1.7,2); without it the parent's slf4j 2.x yields [2.0,3) -->
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.28</version>
+      <version>1.7.36</version>
       <scope>provided</scope>
     </dependency>
-
-    <dependency>
-      <groupId>com.github.tomakehurst</groupId>
-      <artifactId>wiremock-standalone</artifactId>
-      <version>2.23.0</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.awaitility</groupId>
-      <artifactId>awaitility</artifactId>
-      <version>4.2.0</version>
-      <scope>test</scope>
-    </dependency>
-
 
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.2.13</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.1</version>
+      <version>1.6.8</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>4.33.1</version>
+      <version>4.36.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -167,8 +129,6 @@
       <version>1.8</version>
       <scope>test</scope>
     </dependency>
-
-
   </dependencies>
 
   <repositories>
@@ -188,7 +148,6 @@
     </repository>
   </repositories>
 
-
   <profiles>
     <profile>
       <id>standalone</id>
@@ -206,7 +165,6 @@
                 <phase>none</phase>
               </execution>
             </executions>
-
           </plugin>
           <plugin>
             <groupId>org.commonjava.maven.plugins</groupId>
@@ -222,7 +180,5 @@
       </build>
     </profile>
   </profiles>
-
-
 
 </project>
