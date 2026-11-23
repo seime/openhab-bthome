@@ -78,6 +78,17 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <!-- Replace the SNAPSHOT qualifier in Bundle-Version with a UTC build timestamp (e.g. 4.1.0.202611231545),
+          matching openHAB snapshot bundles. The GitHub release workflow names versioned releases after it, so
+          users can map `bundle:list` output to a release. The Maven version / jar file name is unaffected. -->
+        <groupId>biz.aQute.bnd</groupId>
+        <artifactId>bnd-maven-plugin</artifactId>
+        <configuration>
+          <bnd><![CDATA[${oh.bndDefaults}
+-snapshot: ${tstamp;yyyyMMddHHmm;UTC}]]></bnd>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -209,24 +220,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-    <profile>
-      <id>oh3</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <groupId>org.apache.karaf.tooling</groupId>
-              <artifactId>karaf-maven-plugin</artifactId>
-              <version>4.3.9</version>
-            </plugin>
-          </plugins>
-        </pluginManagement>
-      </build>
-
     </profile>
   </profiles>
 

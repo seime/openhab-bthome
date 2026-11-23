@@ -3,42 +3,166 @@ name: Build and create release
 on:
   push:
     branches:
-      - "main"
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-
   build_oh4:
     strategy:
       fail-fast: false
       matrix:
         java: [ '17' ]
-        maven: [ '3.9.4' ]
-        os: [ 'ubuntu-latest' ]
+        os: [ ubuntu-latest ]
+
     name: Build OH4 (Java ${{ matrix.java }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: ${{matrix.java}}
-          distribution: 'temurin'
-      - name: Cache local Maven repository
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ matrix.java }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ matrix.java }}-maven-
-            ${{ matrix.java }}-maven-${{ hashFiles('**/pom.xml') }}
-      - name: Build
-        run: mvn -P 'standalone' --batch-mode -DskipChecks -Doh.java.version=17 clean verify
 
-      - uses: "marvinpinto/action-automatic-releases@latest"
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest_oh4"
-          prerelease: true
-          title: "Latest Build"
-          files: |
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build
+        run: >
+          mvn -P standalone
+          --batch-mode
+          -DskipChecks
+          -Doh.java.version=17
+          clean verify
+
+      - name: Upload OH4 JARs
+        uses: actions/upload-artifact@v7
+        with:
+          name: oh4-artifact
+          path: |
             target/*.jar
+            !target/*-sources.jar
+
+  release_oh4:
+    name: Publish releases
+    needs: build_oh4
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    # Serialize releases so two quick pushes can't interleave tag moves and asset uploads
+    concurrency:
+      group: release-oh4
+      cancel-in-progress: false
+
+    permissions:
+      contents: write
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      # Stable file name attached to every versioned release. Together with GitHub's "latest" redirect it gives
+      # a permanent download link (used by the openHAB Marketplace entry):
+      #   https://github.com/<repo>/releases/latest/download/no.seime.openhab.binding.bluetooth.bthome.jar
+      STABLE_JAR_NAME: no.seime.openhab.binding.bluetooth.bthome.jar
+      # Versioned releases older than KEEP_DAYS are deleted, but the newest KEEP_MIN are always kept
+      KEEP_DAYS: 90
+      KEEP_MIN: 5
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history and tags for release notes
+
+      - name: Download OH4 JARs
+        uses: actions/download-artifact@v8
+        with:
+          name: oh4-artifact
+          path: target
+
+      - name: Determine bundle version
+        id: version
+        run: |
+          shopt -s nullglob
+          jars=(target/*.jar)
+          if [ ${#jars[@]} -ne 1 ]; then
+            echo "::error::Expected exactly one jar, found: ${jars[*]}"
+            exit 1
+          fi
+          jar="${jars[0]}"
+          # Bundle-Version as reported by `bundle:list` in the openHAB console, e.g. 4.1.0.202611231545
+          version=$(unzip -p "$jar" META-INF/MANIFEST.MF | tr -d '\r' | sed -n 's/^Bundle-Version: *//p')
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]{12}$ ]]; then
+            echo "::error::Unexpected Bundle-Version '$version' (expected major.minor.micro.yyyyMMddHHmm)"
+            exit 1
+          fi
+          echo "jar=$jar" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Bundle-Version: $version"
+
+      - name: Create versioned release
+        env:
+          JAR: ${{ steps.version.outputs.jar }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists (re-run?), skipping"
+            exit 0
+          fi
+          versioned_jar="target/no.seime.openhab.binding.bluetooth.bthome-${VERSION}.jar"
+          stable_jar="target/stable/$STABLE_JAR_NAME"
+          mkdir -p target/stable
+          cp "$JAR" "$versioned_jar"
+          cp "$JAR" "$stable_jar"
+
+          # Notes list the commits since the previous versioned release
+          previous=$(gh release list --limit 100 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | test("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]{12}$"))] | sort_by(.createdAt) | last | .tagName // empty')
+          {
+            echo "Build of \`main\` for openHAB 4.1 and newer (including 5.x). Bundle version \`$VERSION\`, as shown by \`bundle:list\`."
+            echo
+            echo "Both jars are identical: \`$STABLE_JAR_NAME\` has a fixed name for the permanent link"
+            echo "https://github.com/$GH_REPO/releases/latest/download/$STABLE_JAR_NAME"
+            echo
+            echo "## Changes"
+            if [ -n "$previous" ] && git rev-parse -q --verify "refs/tags/$previous" > /dev/null; then
+              git log --format='- %h %s (%an)' "$previous..$GITHUB_SHA"
+              echo
+              echo "**Full changelog**: https://github.com/$GH_REPO/compare/$previous...$VERSION"
+            else
+              git log -20 --format='- %h %s (%an)' "$GITHUB_SHA"
+            fi
+          } > versioned-notes.md
+
+          # Created last and marked Latest, so /releases/latest always resolves to the newest build
+          gh release create "$VERSION" "$versioned_jar" "$stable_jar" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --latest \
+            --notes-file versioned-notes.md
+
+      - name: Prune old versioned releases
+        run: |
+          cutoff=$(date -u -d "-${KEEP_DAYS} days" +%s)
+          # Only bundle-version releases (e.g. 4.1.0.202611231545); other tags are never touched
+          gh release list --limit 1000 --json tagName,createdAt,isLatest \
+            --jq '[.[] | select(.tagName | test("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]{12}$"))]
+                  | sort_by(.createdAt) | reverse | .[]
+                  | [.tagName, .createdAt, .isLatest] | @tsv' > versioned.tsv
+          i=0
+          pruned=0
+          while IFS=$'\t' read -r tag created latest; do
+            i=$((i + 1))
+            if [ "$i" -le "$KEEP_MIN" ] || [ "$latest" = "true" ]; then
+              continue
+            fi
+            if [ "$(date -u -d "$created" +%s)" -ge "$cutoff" ]; then
+              continue
+            fi
+            echo "Pruning $tag (created $created)"
+            gh release delete "$tag" --cleanup-tag -y
+            pruned=$((pruned + 1))
+          done < versioned.tsv
+          echo "Kept $((i - pruned)) of $i versioned releases, pruned $pruned"
